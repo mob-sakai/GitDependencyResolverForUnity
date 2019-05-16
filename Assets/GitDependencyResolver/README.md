@@ -8,12 +8,12 @@ You can use a git url as a package dependency!
 
 [![](https://img.shields.io/github/release/mob-sakai/GitDependencyResolverForUnity.svg?label=latest%20version)](https://github.com/mob-sakai/GitDependencyResolverForUnity/releases)
 [![](https://img.shields.io/github/release-date/mob-sakai/GitDependencyResolverForUnity.svg)](https://github.com/mob-sakai/GitDependencyResolverForUnity/releases)
-![](https://img.shields.io/badge/unity-2017%2B-green.svg)
+![](https://img.shields.io/badge/unity-2018%20or%20later-green.svg)
 [![](https://img.shields.io/github/license/mob-sakai/GitDependencyResolverForUnity.svg)](https://github.com/mob-sakai/GitDependencyResolverForUnity/blob/upm/LICENSE.txt)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com)
 [![](https://img.shields.io/twitter/follow/mob_sakai.svg?label=Follow&style=social)](https://twitter.com/intent/follow?screen_name=mob_sakai)
 
-<< [Description](#Description) | [Install](#install) | [Usage](#usage) | [Development Note](#development-note) >>
+<< [Description](#Description) | [Install](#install) | [Usage](#usage) | [Demo](#demo) | [Development Note](#development-note) >>
 
 ### What's new? [See changelog ![](https://img.shields.io/github/release-date/mob-sakai/GitDependencyResolverForUnity.svg?label=last%20updated)](https://github.com/mob-sakai/GitDependencyResolverForUnity/blob/upm/CHANGELOG.md)
 ### Do you want to receive notifications for new releases? [Watch this repo ![](https://img.shields.io/github/watchers/mob-sakai/GitDependencyResolverForUnity.svg?style=social&label=Watch)](https://github.com/mob-sakai/GitDependencyResolverForUnity/subscription)
@@ -35,19 +35,14 @@ However, UPM does not support git urls as dependencies in the package. :(
 [ package-a/package.json ]
 {
   "name": "com.coffee.package-a",
-  "version": "0.3.0",
+  "version": "0.1.0",
   "dependencies": {
     "com.coffee.core-a" : "https://github.com/mob-sakai/GitPackageTest#core-a-0.1.0"
   }
 }
-
-====
-An error occurred while resolving packages:
-  Package com.coffee.package-a@https://github.com/mob-sakai/GitPackageTest#package-a-0.3.0 has invalid dependencies:
-    com.coffee.core-a: Version 'https://github.com/mob-sakai/GitPackageTest#core-a-0.1.0' is invalid. Expected a 'SemVer' compatible value.
-
-A re-import of the project may be required to fix the issue or a manual modification of *****/Packages/manifest.json file.
 ```
+![console](https://user-images.githubusercontent.com/12690315/57829436-e84daa00-77e9-11e9-84af-f5e46b1f0f02.png)
+
 
 <br>
 This plugin resolves git url dependencies in the package for Unity Package Manager.
@@ -77,7 +72,7 @@ Find `Packages/manifest.json` in your project and edit it to look like this:
   "dependencies": {
     "com.coffee.git-dependency-resolver": "https://github.com/mob-sakai/GitDependencyResolverForUnity.git#1.0.0",
     ...
-  },
+  }
 }
 ```
 To update the package, change `#{version}` to the target version.
@@ -86,21 +81,28 @@ Or, use [UpmGitExtension](https://github.com/mob-sakai/UpmGitExtension.git).
 
 ##### Requirement
 
-* Unity 2018.3+ *(including 2019.1+)*
+* Unity 2018.3 or later
 
 
 
 <br><br><br><br>
-## Usage 
+## Usage
 
 * If dependencies are not resolved successfully, try the following:
     * Reopen the project.
     * Delete `Library` directory in the project.  
-![library](https://user-images.githubusercontent.com/12690315/57823863-06a8ab00-77d4-11e9-95ce-d92220bf716f.png)
+![library](https://user-images.githubusercontent.com/12690315/57830868-690ea500-77ee-11e9-9e47-4a9794d77da8.png)
 * When `Unity Package Manager Error` window is opens, click `Continue`.  
 ![window](https://user-images.githubusercontent.com/12690315/57823865-08726e80-77d4-11e9-8203-46bf22d504d9.png)
 * Use [SemVer](https://semver.org/) as a tag or branch name.  
 eg. `1.0.0`, `0.5.0-preview10`, `0.1.0-alpha+daily5`   
+
+
+
+<br><br><br><br>
+## Demo
+
+https://github.com/mob-sakai/GitPackageTest/tree/git-dependency-resolver-test
 
 
 
