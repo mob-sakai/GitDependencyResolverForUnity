@@ -9,10 +9,26 @@ namespace Coffee.PackageManager
 	[InitializeOnLoad]
 	public static class GitDependencyResolver
 	{
+		const System.StringComparison Ordinal = System.StringComparison.Ordinal;
+	
 		static GitDependencyResolver ()
 		{
 			EditorApplication.projectChanged += StartResolve;
 			StartResolve ();
+		}
+		
+		static PackageMeta[] GetInstalledPackages()
+		{
+			//return Directory.GetDirectories ("./Library/PackageCache")
+			//	.Concat (Directory.GetDirectories ("./Packages"))
+			//	.Select (PackageMeta.FromPackageDir)    // Convert to PackageMeta
+			//	.Where (x => x != null)                 // Skip null
+			//	.ToArray ();
+			return AssetDatabase.GetAllAssetPaths()
+				.Where(x => x.StartsWith("Packages/", Ordinal) && x.EndsWith("/package.json", Ordinal))
+				.Select(PackageMeta.FromPackageJson)	// Convert to PackageMeta
+				.Where (x => x != null)					// Skip null
+				.ToArray();
 		}
 
 		/// <summary>
@@ -20,37 +36,37 @@ namespace Coffee.PackageManager
 		/// </summary>
 		static void UninstallUnusedPackages ()
 		{
-			bool check = true;
-			while (check)
+			bool needToCheck = true;
+			while (needToCheck)
 			{
-				check = false;
-
+				needToCheck = false;
+				
 				// Collect all dependencies.
-				var allDependencies = Directory.GetDirectories ("./Library/PackageCache")
-					.Concat (Directory.GetDirectories ("./Packages"))
-					.Select (PackageMeta.FromPackageDir)            // Convert to PackageMeta
-					.Where (x => x != null)                         // Skip null
+				var allDependencies = GetInstalledPackages()
 					.SelectMany (x => x.dependencies)               // Get all dependencies
 					.ToArray ();
-
-				// Collect unused pakages.
-				var unusedPackages = Directory.GetDirectories ("./Packages")
-					.Where (x => Path.GetFileName (x).StartsWith ("."))         // Directory name starts with '.'. This is 'auto-installed package'
-					.Select (PackageMeta.FromPackageDir)                        // Convert to PackageMeta
-					.Where (x => x != null)                                     // Skip null
-					.Where (x => allDependencies.All (y => y.name != x.name))   // No depended from other packages
+					
+				PackageMeta[] autoInstalledPackages = Directory.GetDirectories ("./Packages")
+					.Where (x => Path.GetFileName(x).StartsWith (".", Ordinal))         // Directory name starts with '.'. This is 'auto-installed package'
+					.Select (PackageMeta.FromPackageDir)    // Convert to PackageMeta
+					.Where (x => x != null)                 // Skip null
 					.ToArray ();
+				
+				// Collect unused pakages.
+				var unusedPackages = autoInstalledPackages
+					.Where (x => Path.GetFileName(x.path).StartsWith (".", Ordinal))         // Directory name starts with '.'. This is 'auto-installed package'
+					.Where (x => !allDependencies.Any (y => y.name == x.name && y.version == x.version))   // No depended from other packages
+					;
 
 				// Uninstall unused packages and re-check.
 				foreach (var p in unusedPackages)
 				{
-					check = true;
-					Debug.LogFormat ("[Resolver] Uninstall unused package: {0} from {1}", p.name, p.path);
+					needToCheck = true;
+					Debug.LogFormat ("[Resolver] Uninstall unused package {0}:{1} from {2}", p.name, p.version,p.path);
 					FileUtil.DeleteFileOrDirectory (p.path);
 				}
 			}
 		}
-
 
 		static void StartResolve ()
 		{
@@ -58,11 +74,7 @@ namespace Coffee.PackageManager
 			UninstallUnusedPackages ();
 
 			// Collect all installed pakages.
-			var installedPackages = Directory.GetDirectories ("./Library/PackageCache")
-				.Concat (Directory.GetDirectories ("./Packages"))
-				.Select (PackageMeta.FromPackageDir)    // Convert to PackageMeta
-				.Where (x => x != null)                 // Skip null
-				.ToArray ();
+			PackageMeta[] installedPackages = GetInstalledPackages();
 
 			// Collect all dependencies.
 			var dependencies = installedPackages
@@ -82,7 +94,6 @@ namespace Coffee.PackageManager
 				// Install the depended package later.
 				if (!isInstalled)
 				{
-					Debug.LogFormat ("[Resolver] A dependency package is requested: {0}", dependency.name);
 					requestedPackages.RemoveAll (x => dependency.name == x.name);
 					requestedPackages.Add (dependency);
 				}
@@ -96,12 +107,12 @@ namespace Coffee.PackageManager
 			for (int i = 0; i < requestedPackages.Count; i++)
 			{
 				PackageMeta meta = requestedPackages [i];
-				EditorUtility.DisplayProgressBar ("Add Package", "Cloning: " + meta.name, i / (float)requestedPackages.Count);
-				Debug.LogFormat ("[Resolver] A package is cloning: {0}", meta.name);
+				EditorUtility.DisplayProgressBar ("Clone Package", string.Format ("Cloning {0}:{1}", meta.name, meta.version), i / (float)requestedPackages.Count);
+				Debug.LogFormat ("[Resolver] Cloning {0}: {1}", meta.name, meta.version);
 				bool success = GitUtils.ClonePackage (meta);
 				if (!success)
 				{
-					Debug.LogFormat ("[Resolver] Failed to clone: {0}", meta.name);
+					Debug.LogFormat ("[Resolver] Failed to clone {0}:{1}", meta.name, meta.version);
 					break;
 				}
 			}
