@@ -15,12 +15,17 @@ namespace Coffee.PackageManager
 		public string path { get; private set; }
 		public PackageMeta [] dependencies { get; private set; }
 
-		public static PackageMeta FromPackageDir (string dir)
+		public static PackageMeta FromPackageJson (string filePath)
 		{
 			try
 			{
-				Dictionary<string, object> dict = Json.Deserialize (File.ReadAllText (dir + "/package.json")) as Dictionary<string, object>;
-				PackageMeta meta = new PackageMeta () { path = dir, };
+				if(!File.Exists(filePath))
+				{
+					return null;
+				}
+				
+				Dictionary<string, object> dict = Json.Deserialize (File.ReadAllText (filePath)) as Dictionary<string, object>;
+				PackageMeta meta = new PackageMeta () { path = Path.GetDirectoryName(filePath), };
 				object obj;
 
 				if (dict.TryGetValue ("name", out obj))
@@ -49,6 +54,11 @@ namespace Coffee.PackageManager
 			{
 				return null;
 			}
+		}
+
+		public static PackageMeta FromPackageDir (string dir)
+		{
+			return FromPackageJson(dir + "/package.json");
 		}
 
 		public static PackageMeta FromNameAndUrl (string name, string url)
