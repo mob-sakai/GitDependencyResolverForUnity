@@ -2,7 +2,7 @@
   "name": "com.coffee.git-dependency-resolver",
   "displayName": "Git Dependency Resolver",
 	"description": "This plugin resolves git dependencies in the package for Unity Package Manager.\nYou can use a git url as a package dependency!",
-	"version": "1.0.0",
+	"version": "1.1.2",
 	"unity": "2018.3",
 	"license": "MIT",
 	"repository": {

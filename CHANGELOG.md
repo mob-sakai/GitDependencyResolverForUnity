@@ -1,8 +1,26 @@
 # Changelog
 
+## [1.1.1](https://github.com/mob-sakai/GitDependencyResolverForUnity/tree/1.1.1) (2019-08-05)
+
+[Full Changelog](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/1.1.0...1.1.1)
+
+**Fixed bugs:**
+
+- guids for git-dependency-resolver conflict with upm-git-extension [\#15](https://github.com/mob-sakai/GitDependencyResolverForUnity/issues/15)
+
+## [1.1.0](https://github.com/mob-sakai/GitDependencyResolverForUnity/tree/1.1.0) (2019-06-11)
+
+[Full Changelog](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/1.0.0...1.1.0)
+
+**Implemented enhancements:**
+
+- Add notes on using this package [\#13](https://github.com/mob-sakai/GitDependencyResolverForUnity/issues/13)
+- Refer to no files from the Library folder [\#12](https://github.com/mob-sakai/GitDependencyResolverForUnity/issues/12)
+- Deterministic package installation [\#10](https://github.com/mob-sakai/GitDependencyResolverForUnity/issues/10)
+
 ## [1.0.0](https://github.com/mob-sakai/GitDependencyResolverForUnity/tree/1.0.0) (2019-05-16)
 
-[Full Changelog](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/a3e62a69d2a251711e8044936af8e56431b4b0f2...1.0.0)
+[Full Changelog](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/96d11551ce2e670f5c991a254ac3dd4fb4b67c02...1.0.0)
 
 This plugin resolves git url dependencies in the package for Unity Package Manager.
 

@@ -60,6 +60,39 @@ You can use a git url as a package dependency!
 * Support Unity 2019.1+
 * Support .Net 3.5 & 4.x
 * Update package with a specific tag/branch
+* Deterministic package installation
+* Refer to no files from the Library folder
+
+
+#### Notes
+
+From: https://forum.unity.com/threads/git-support-on-package-manager.573673/page-3#post-4552084
+
+> There is no conflict detection and/or resolution algorithm.
+> The lastest package found with the same name is used.
+> This is not how the package manager resolve dependency (See https://docs.unity3d.com/Manual/upm-conflicts-auto.html).
+
+In Unity's algorithm, package conflicts are resolved by "dependency-level from root".  
+The all packages resolved by this plugin are "dependency-level=1".  
+Therefore, in some cases, the package of the intended version may not be installed.
+
+For example, in the case of a project with a dependency graph like this:
+
+```
+project (root)
+ ├ package A: 1.0.0 
+ │  └ package X: 2.0.0
+ └ package B: 1.0.0
+    └ package C: 2.0.0
+       └ package X: 2.0.1
+```
+
+**This plugin's algorithm**
+
+Install -> A: 1.0.0, B: 1.0.0, C: 2.0.0, X: 2.0.1
+
+**Unity's algorithm**
+Install -> A: 1.0.0, B: 1.0.0, C: 2.0.0, X: **2.0.0**
 
 
 
@@ -70,13 +103,13 @@ Find `Packages/manifest.json` in your project and edit it to look like this:
 ```js
 {
   "dependencies": {
-    "com.coffee.git-dependency-resolver": "https://github.com/mob-sakai/GitDependencyResolverForUnity.git#1.0.0",
+    "com.coffee.git-dependency-resolver": "https://github.com/mob-sakai/GitDependencyResolverForUnity.git#1.1.2",
     ...
   }
 }
 ```
-To update the package, change `#{version}` to the target version.
-Or, use [UpmGitExtension](https://github.com/mob-sakai/UpmGitExtension.git).
+To update the package, change `#{version}` to the target version.  
+Or, use [UpmGitExtension](https://github.com/mob-sakai/UpmGitExtension.git) to install or update the package.
 
 
 ##### Requirement
@@ -102,7 +135,7 @@ eg. `1.0.0`, `0.5.0-preview10`, `0.1.0-alpha+daily5`
 <br><br><br><br>
 ## Demo
 
-https://github.com/mob-sakai/GitPackageTest/tree/git-dependency-resolver-test
+https://github.com/mob-sakai/UnityGitDependencyTest
 
 
 
