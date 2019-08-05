@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/mob-sakai/GitDependencyResolverForUnity/tree/1.1.1) (2019-08-05)
+
+[Full Changelog](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/1.1.0...1.1.1)
+
+**Fixed bugs:**
+
+- guids for git-dependency-resolver conflict with upm-git-extension [\#15](https://github.com/mob-sakai/GitDependencyResolverForUnity/issues/15)
+
 ## [1.1.0](https://github.com/mob-sakai/GitDependencyResolverForUnity/tree/1.1.0) (2019-06-11)
 
 [Full Changelog](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/1.0.0...1.1.0)
