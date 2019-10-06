@@ -2,10 +2,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using MiniJSON;
-using Semver;
 
-namespace Coffee.PackageManager
+namespace Coffee.PackageManager.DependencyResolver
 {
 	public class PackageMeta
 	{
