@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace Coffee.PackageManager.DependencyResolver
 {
@@ -36,16 +37,16 @@ namespace Coffee.PackageManager.DependencyResolver
 					meta.version = obj as string;
 				}
 
-				if (dict.TryGetValue ("dependencies", out obj))
-				{
-					meta.dependencies = (dict ["dependencies"] as Dictionary<string, object>)
-						.Select (x => PackageMeta.FromNameAndUrl (x.Key, (string)x.Value))
-						.ToArray ();
-				}
-				else
-				{
-					meta.dependencies = new PackageMeta [0];
-				}
+                if (dict.TryGetValue("dependencies", out obj))
+                {
+                    meta.dependencies = (dict["dependencies"] as Dictionary<string, object>)
+                        .Select(x => PackageMeta.FromNameAndUrl(x.Key, (string)x.Value))
+                        .ToArray();
+                }
+                else
+                {
+                    meta.dependencies = new PackageMeta[0];
+                }
 				return meta;
 			}
 			catch
@@ -72,8 +73,12 @@ namespace Coffee.PackageManager.DependencyResolver
 				{
 					meta.path = first;
 					meta.branch = 0 < second.Length ? second : "HEAD";
-					meta.version = meta.branch;
-				}
+                    SemVersion version;
+                    if (!SemVersion.TryParse(meta.branch, out version))
+                        version = null;//new SemVersion(0); //empty version
+                    meta.version = version;
+                    //meta.version = meta.branch;
+                }
 				else
 				{
 					meta.version = first;
