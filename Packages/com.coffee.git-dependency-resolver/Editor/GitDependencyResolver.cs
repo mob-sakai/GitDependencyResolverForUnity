@@ -19,11 +19,11 @@ namespace Coffee.PackageManager.DependencyResolver
 		
 		static PackageMeta[] GetInstalledPackages()
 		{
-			//return Directory.GetDirectories ("./Library/PackageCache")
-			//	.Concat (Directory.GetDirectories ("./Packages"))
-			//	.Select (PackageMeta.FromPackageDir)    // Convert to PackageMeta
-			//	.Where (x => x != null)                 // Skip null
-			//	.ToArray ();
+			/*return Directory.GetDirectories ("./Library/PackageCache")
+				.Concat (Directory.GetDirectories ("./Packages"))
+				.Select (PackageMeta.FromPackageDir)    // Convert to PackageMeta
+				.Where (x => x != null)                 // Skip null
+				.ToArray ();*/
 			return AssetDatabase.GetAllAssetPaths()
 				.Where(x => x.StartsWith("Packages/", Ordinal) && x.EndsWith("/package.json", Ordinal))
 				.Select(PackageMeta.FromPackageJson)	// Convert to PackageMeta
@@ -55,7 +55,7 @@ namespace Coffee.PackageManager.DependencyResolver
 				// Collect unused pakages.
 				var unusedPackages = autoInstalledPackages
 					.Where (x => Path.GetFileName(x.path).StartsWith (".", Ordinal))         // Directory name starts with '.'. This is 'auto-installed package'
-					.Where (x => !allDependencies.Any (y => y.name == x.name && y.version == x.version))   // No depended from other packages
+					.Where (x => !allDependencies.Any (y => y.name == x.name && (y.version == null || y.version == x.version)))   // No depended from other packages
 					;
 
 				// Uninstall unused packages and re-check.
@@ -86,10 +86,10 @@ namespace Coffee.PackageManager.DependencyResolver
 			// Check all dependencies.
 			foreach (var dependency in dependencies)
 			{
-				// Is the depended package installed already?
-				bool isInstalled = installedPackages
-						.Concat (requestedPackages)
-						.Any (x => dependency.name == x.name && dependency.version <= x.version);
+                // Is the depended package installed already?
+                bool isInstalled = installedPackages
+                        .Concat(requestedPackages)
+                        .Any(x => dependency.name == x.name && ((dependency.version != null && dependency.version <= x.version) || (dependency.version == null)));
 
 				// Install the depended package later.
 				if (!isInstalled)
