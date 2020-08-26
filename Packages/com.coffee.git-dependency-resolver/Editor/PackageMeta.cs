@@ -16,6 +16,7 @@ namespace Coffee.GitDependencyResolver
             new Regex(
                 @"^(git\+)?" +
                 @"(?<url>[^#?]*)" +
+                @"(\?(?<query>[^#]*))?" +
                 @"(#(?<rev>.*))?",
                 k_RegOption);
 
@@ -29,6 +30,7 @@ namespace Coffee.GitDependencyResolver
         internal SemVersion version { get; private set; }
         public string rev { get; private set; }
         public string url { get; private set; }
+        public string path { get; private set; }
         public PackageMeta[] dependencies { get; private set; }
 
         private PackageMeta()
@@ -36,6 +38,7 @@ namespace Coffee.GitDependencyResolver
             name = "";
             url = "";
             rev = "";
+            path = "";
             version = new SemVersion(0);
             dependencies = new PackageMeta [0];
         }
@@ -114,12 +117,15 @@ namespace Coffee.GitDependencyResolver
             // Get version from revision/branch/tag
             package.SetVersion(package.rev);
 
+            package.ProcessUrlQuery(m.Groups["query"].Value);
             return package;
         }
 
         public string GetPackagePath(string clonePath)
         {
-            return clonePath;
+            return string.IsNullOrEmpty(path)
+                ? clonePath
+                : (clonePath + "/" + path).Replace("//", "/");
         }
 
         private void SetVersion(string ver)
@@ -127,6 +133,28 @@ namespace Coffee.GitDependencyResolver
             SemVersion v;
             if (SemVersion.TryParse(ver, out v) && version < v)
                 version = v;
+        }
+
+        private void ProcessUrlQuery(string urlQuery)
+        {
+            // Process url query.
+            var queries = urlQuery.Split('&')
+                .Select(q => q.Split('='))
+                .Where(q => q.Length == 2)
+                .ToDictionary(q => q[0], q => q[1]);
+
+            // path query.
+            string value;
+            if (queries.TryGetValue("path", out value))
+                path = value.Trim('/');
+
+            // version query.
+            if (queries.TryGetValue("version", out value))
+            {
+                SemVersion v;
+                SemVersion.TryParse(value, out v);
+                version = v;
+            }
         }
 
         public IEnumerable<PackageMeta> GetAllDependencies()
@@ -141,7 +169,7 @@ namespace Coffee.GitDependencyResolver
 
         public override string ToString()
         {
-            return string.Format("{0}@{1} ({2})", name, version, rev);
+            return string.Format("{0}@{1} ({2}) [{3}]", name, version, rev, path);
         }
     }
 }
