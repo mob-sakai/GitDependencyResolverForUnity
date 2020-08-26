@@ -2,17 +2,43 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using UnityEngine;
 
 namespace Coffee.GitDependencyResolver
 {
-    public class PackageMeta
+    internal class PackageMeta
     {
+#if NETSTANDARD
+        const RegexOptions k_RegOption = RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture;
+#else
+        const RegexOptions k_RegOption = RegexOptions.CultureInvariant | RegexOptions.Compiled | RegexOptions.ExplicitCapture;
+#endif
+        private static readonly Regex s_PackageUrlReg =
+            new Regex(
+                @"^(git\+)?" +
+                @"(?<url>[^#?]*)" +
+                @"(#(?<rev>.*))?",
+                k_RegOption);
+
+        private static readonly Regex s_IsGitReg =
+            new Regex(
+                @"^(git\\+)?" +
+                @"(git@|git://|http://|https://|ssh://)",
+                k_RegOption);
+
         public string name { get; private set; }
         internal SemVersion version { get; private set; }
-        public string branch { get; private set; }
-        public string path { get; private set; }
+        public string rev { get; private set; }
+        public string url { get; private set; }
         public PackageMeta[] dependencies { get; private set; }
+
+        private PackageMeta()
+        {
+            name = "";
+            url = "";
+            rev = "";
+            version = new SemVersion(0);
+            dependencies = new PackageMeta [0];
+        }
 
         public static PackageMeta FromPackageJson(string filePath)
         {
@@ -23,32 +49,35 @@ namespace Coffee.GitDependencyResolver
                     return null;
                 }
 
+                string dir = Path.GetDirectoryName(filePath);
                 Dictionary<string, object> dict = Json.Deserialize(File.ReadAllText(filePath)) as Dictionary<string, object>;
-                PackageMeta meta = new PackageMeta() {path = Path.GetDirectoryName(filePath),};
+                PackageMeta package = new PackageMeta() {url = dir,};
+
+
                 object obj;
 
                 if (dict.TryGetValue("name", out obj))
                 {
-                    meta.name = obj as string;
+                    package.name = obj as string;
                 }
 
                 if (dict.TryGetValue("version", out obj))
                 {
-                    meta.version = obj as string;
+                    package.version = obj as string;
                 }
 
                 if (dict.TryGetValue("dependencies", out obj))
                 {
-                    meta.dependencies = (dict["dependencies"] as Dictionary<string, object>)
-                        .Select(x => PackageMeta.FromNameAndUrl(x.Key, (string) x.Value))
+                    package.dependencies = (obj as Dictionary<string, object>)
+                        .Select(x => FromNameAndUrl(x.Key, (string) x.Value))
                         .ToArray();
                 }
                 else
                 {
-                    meta.dependencies = new PackageMeta[0];
+                    package.dependencies = new PackageMeta[0];
                 }
 
-                return meta;
+                return package;
             }
             catch
             {
@@ -58,35 +87,61 @@ namespace Coffee.GitDependencyResolver
 
         public static PackageMeta FromPackageDir(string dir)
         {
-            return FromPackageJson(dir + "/package.json");
+            var package = FromPackageJson(dir + "/package.json");
+            package.SetVersion(package.rev);
+            return package;
         }
 
         public static PackageMeta FromNameAndUrl(string name, string url)
         {
-            PackageMeta meta = new PackageMeta() {name = name, dependencies = new PackageMeta [0]};
-            Match m = Regex.Match(url, "([^#]*)#?(.*)");
-            if (m.Success)
-            {
-                string first = m.Groups[1].Value;
-                string second = m.Groups[2].Value;
+            PackageMeta package = new PackageMeta() {name = name};
 
-                if (first.Contains("://"))
-                {
-                    meta.path = first;
-                    meta.branch = 0 < second.Length ? second : "HEAD";
-                    SemVersion version;
-                    if (!SemVersion.TryParse(meta.branch, out version))
-                        version = null; //new SemVersion(0); //empty version
-                    meta.version = version;
-                    //meta.version = meta.branch;
-                }
-                else
-                {
-                    meta.version = first;
-                }
+            // Non git package.
+            var isGit = s_IsGitReg.IsMatch(url);
+            if (!isGit)
+            {
+                package.SetVersion(url);
+                return package;
             }
 
-            return meta;
+            // No package url
+            Match m = s_PackageUrlReg.Match(url);
+            if (!m.Success) return package;
+
+            package.url = m.Groups["url"].Value;
+            package.rev = m.Groups["rev"].Value;
+
+            // Get version from revision/branch/tag
+            package.SetVersion(package.rev);
+
+            return package;
+        }
+
+        public string GetPackagePath(string clonePath)
+        {
+            return clonePath;
+        }
+
+        private void SetVersion(string ver)
+        {
+            SemVersion v;
+            if (SemVersion.TryParse(ver, out v) && version < v)
+                version = v;
+        }
+
+        public IEnumerable<PackageMeta> GetAllDependencies()
+        {
+            return dependencies;
+        }
+
+        public string GetDirectoryName()
+        {
+            return string.Format("{0}@{1}", name, version);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}@{1} ({2})", name, version, rev);
         }
     }
 }

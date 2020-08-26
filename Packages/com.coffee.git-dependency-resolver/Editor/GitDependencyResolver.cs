@@ -7,17 +7,17 @@ using UnityEngine;
 namespace Coffee.GitDependencyResolver
 {
     [InitializeOnLoad]
-    public static class GitDependencyResolver
+    internal static class Resolver
     {
         const System.StringComparison Ordinal = System.StringComparison.Ordinal;
 
-        static GitDependencyResolver()
+        static Resolver()
         {
             EditorApplication.projectChanged += StartResolve;
             StartResolve();
         }
 
-        static PackageMeta[] GetInstalledPackages()
+        private static PackageMeta[] GetInstalledPackages()
         {
             /*return Directory.GetDirectories ("./Library/PackageCache")
                 .Concat (Directory.GetDirectories ("./Packages"))
@@ -34,7 +34,7 @@ namespace Coffee.GitDependencyResolver
         /// <summary>
         /// Uninstall unused packages (for auto-installed packages)
         /// </summary>
-        static void UninstallUnusedPackages()
+        private static void UninstallUnusedPackages()
         {
             bool needToCheck = true;
             while (needToCheck)
@@ -43,7 +43,7 @@ namespace Coffee.GitDependencyResolver
 
                 // Collect all dependencies.
                 var allDependencies = GetInstalledPackages()
-                    .SelectMany(x => x.dependencies) // Get all dependencies
+                    .SelectMany(x => x.GetAllDependencies()) // Get all dependencies
                     .ToArray();
 
                 PackageMeta[] autoInstalledPackages = Directory.GetDirectories("./Packages")
@@ -63,12 +63,12 @@ namespace Coffee.GitDependencyResolver
                 {
                     needToCheck = true;
                     Debug.LogFormat("[Resolver] Uninstall unused package {0}:{1} from {2}", p.name, p.version, p.path);
-                    FileUtil.DeleteFileOrDirectory(p.path);
+                    FileUtil.DeleteFileOrDirectory(p.url);
                 }
             }
         }
 
-        static void StartResolve()
+        private static void StartResolve()
         {
             // Uninstall unused packages (for auto-installed packages)
             UninstallUnusedPackages();
