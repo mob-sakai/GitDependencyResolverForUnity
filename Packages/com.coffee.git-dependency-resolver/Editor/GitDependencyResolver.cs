@@ -32,7 +32,7 @@ namespace Coffee.GitDependencyResolver
         /// </summary>
         private static void UninstallUnusedPackages()
         {
-            bool needToCheck = true;
+            var needToCheck = true;
             while (needToCheck)
             {
                 needToCheck = false;
