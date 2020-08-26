@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-namespace Coffee.PackageManager.DependencyResolver
+namespace Coffee.GitDependencyResolver
 {
     internal static class DirUtils
     {

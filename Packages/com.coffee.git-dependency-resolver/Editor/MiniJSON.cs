@@ -33,7 +33,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Coffee.PackageManager.DependencyResolver
+namespace Coffee.GitDependencyResolver
 {
     // Example usage:
     //

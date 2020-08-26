@@ -2,7 +2,7 @@
 using System.Text;
 using UnityEngine;
 
-namespace Coffee.PackageManager.DependencyResolver
+namespace Coffee.GitDependencyResolver
 {
     internal static class GitUtils
     {

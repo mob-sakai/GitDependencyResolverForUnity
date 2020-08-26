@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Coffee.PackageManager.DependencyResolver
+namespace Coffee.GitDependencyResolver
 {
     [InitializeOnLoad]
     public static class GitDependencyResolver

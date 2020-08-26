@@ -28,7 +28,7 @@ using System.Security.Permissions;
 #endif
 using System.Text.RegularExpressions;
 
-namespace Coffee.PackageManager.DependencyResolver
+namespace Coffee.GitDependencyResolver
 {
     /// <summary>
     /// A semantic version implementation.
