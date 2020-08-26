@@ -1,42 +1,26 @@
 ﻿using System.IO;
 using System.Text;
-using UnityEditor;
 using UnityEngine;
 
 namespace Coffee.PackageManager.DependencyResolver
 {
     internal static class GitUtils
     {
-        static readonly StringBuilder s_sbError = new StringBuilder();
-        static readonly StringBuilder s_sbOutput = new StringBuilder();
+        private static readonly StringBuilder s_sbError = new StringBuilder();
+        private static readonly StringBuilder s_sbOutput = new StringBuilder();
 
-        public static bool IsGitRunning { get; private set; }
+        private static bool IsGitRunning { get; set; }
 
-        public delegate void GitCommandCallback(bool success, string output);
+        private delegate void GitCommandCallback(bool success, string output);
 
-        public static bool ClonePackage(PackageMeta pi)
+        public static bool ClonePackage(PackageMeta package, string clonePath)
         {
-            var outpath = "Packages/." + pi.name;
-            if (Directory.Exists(outpath))
-            {
-                FileUtil.DeleteFileOrDirectory(outpath);
-            }
-
-            string args = string.Format("clone --depth=1 --branch {0} --single-branch {1} {2}", pi.branch, pi.path, outpath);
-            ExecuteGitCommand(args,
-                (success, _) =>
-                {
-                    if (success)
-                    {
-                        FileUtil.DeleteFileOrDirectory(outpath + "/.git");
-                    }
-                },
-                true);
-
-            return Directory.Exists(outpath);
+            Directory.CreateDirectory(clonePath);
+            var args = string.Format("clone --depth=1 --branch {0} --single-branch {1} {2}", package.rev, package.url, clonePath);
+            return ExecuteGitCommand(args);
         }
 
-        static WaitWhile ExecuteGitCommand(string args, GitCommandCallback callback, bool waitForExit = false)
+        static bool ExecuteGitCommand(string args, GitCommandCallback callback = null, bool waitForExit = true)
         {
             var startInfo = new System.Diagnostics.ProcessStartInfo
             {
@@ -49,10 +33,11 @@ namespace Coffee.PackageManager.DependencyResolver
             };
 
             var launchProcess = System.Diagnostics.Process.Start(startInfo);
-            if (launchProcess == null || launchProcess.HasExited == true || launchProcess.Id == 0)
+            if (launchProcess == null || launchProcess.HasExited || launchProcess.Id == 0)
             {
                 Debug.LogError("No 'git' executable was found. Please install Git on your system and restart Unity");
-                callback(false, "");
+                if (callback != null)
+                    callback(false, "");
             }
             else
             {
@@ -65,13 +50,14 @@ namespace Coffee.PackageManager.DependencyResolver
                 launchProcess.Exited += (sender, e) =>
                 {
                     IsGitRunning = false;
-                    bool success = 0 == launchProcess.ExitCode;
+                    var success = 0 == launchProcess.ExitCode;
                     if (!success)
                     {
                         Debug.LogErrorFormat("Error: git {0}\n\n{1}", args, s_sbError);
                     }
 
-                    callback(success, s_sbOutput.ToString());
+                    if (callback != null)
+                        callback(success, s_sbOutput.ToString());
                 };
 
                 launchProcess.BeginOutputReadLine();
@@ -84,7 +70,9 @@ namespace Coffee.PackageManager.DependencyResolver
                 }
             }
 
-            return new WaitWhile(() => IsGitRunning);
+            return launchProcess.HasExited
+                ? launchProcess.ExitCode == 0
+                : true;
         }
     }
 }
