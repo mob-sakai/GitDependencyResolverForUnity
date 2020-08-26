@@ -65,11 +65,16 @@ namespace Coffee.GitDependencyResolver
                     .Where(x => x != null) // Skip null
                     .ToArray();
 
+                var used = autoInstalledPackages
+                    .Where(x => allDependencies.Any(y => y.name == x.name)) // Depended from other packages
+                    .GroupBy(x => x.name) // Grouped by package name
+                    .Select(x => x.OrderByDescending(y => y.version).First()) // Latest package
+                    .ToArray();
+
                 // Collect unused pakages.
-                var unusedPackages = autoInstalledPackages
-                        .Where(x => Path.GetFileName(x.path).StartsWith(".", Ordinal)) // Directory name starts with '.'. This is 'auto-installed package'
-                        .Where(x => !allDependencies.Any(y => y.name == x.name && (y.version == null || y.version == x.version))) // No depended from other packages
-                    ;
+                var unused = autoInstalledPackages
+                    .Except(used) // Exclude used packages
+                    .ToArray();
 
                 var sb = new StringBuilder();
                 sb.AppendLine("############## UninstallUnusedPackages ##############");
@@ -84,7 +89,7 @@ namespace Coffee.GitDependencyResolver
                 Log(sb.ToString());
 
                 // Uninstall unused packages and re-check.
-                foreach (var p in unusedPackages)
+                foreach (var p in unused)
                 {
                     needToCheck = true;
                     Log("Uninstall the unused package '{0}@{1}'", p.name, p.version);
