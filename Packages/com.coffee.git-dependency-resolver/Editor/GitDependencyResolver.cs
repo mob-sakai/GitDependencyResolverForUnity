@@ -6,6 +6,8 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("GitDependencyResolver.EditorTests")]
+
 namespace Coffee.GitDependencyResolver
 {
     [InitializeOnLoad]
