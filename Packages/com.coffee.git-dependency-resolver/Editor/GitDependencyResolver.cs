@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,10 +11,24 @@ namespace Coffee.GitDependencyResolver
     [InitializeOnLoad]
     internal static class Resolver
     {
-        const System.StringComparison Ordinal = System.StringComparison.Ordinal;
+        const StringComparison Ordinal = StringComparison.Ordinal;
+        const string k_LogHeader = "<b><color=#2E8B57>[GitResolver]</color></b> ";
+
+        [System.Diagnostics.Conditional("GDR_LOG")]
+        static void Log(string format, params object[] args)
+        {
+            UnityEngine.Debug.LogFormat(k_LogHeader + format, args);
+        }
+
+        static void Error(string format, params object[] args)
+        {
+            UnityEngine.Debug.LogErrorFormat(k_LogHeader + format, args);
+        }
 
         static Resolver()
         {
+            Log("Init");
+
             EditorApplication.projectChanged += StartResolve;
             StartResolve();
         }
@@ -32,6 +48,7 @@ namespace Coffee.GitDependencyResolver
         /// </summary>
         private static void UninstallUnusedPackages()
         {
+            Log("Find for unused automatically installed packages");
             var needToCheck = true;
             while (needToCheck)
             {
@@ -54,11 +71,23 @@ namespace Coffee.GitDependencyResolver
                         .Where(x => !allDependencies.Any(y => y.name == x.name && (y.version == null || y.version == x.version))) // No depended from other packages
                     ;
 
+                var sb = new StringBuilder();
+                sb.AppendLine("############## UninstallUnusedPackages ##############");
+                sb.AppendLine("\n[ allDependencies ] ");
+                allDependencies.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+
+                sb.AppendLine("\n[ autoInstalledPackages ] ");
+                autoInstalledPackages.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+
+                sb.AppendLine("\n[ unusedPackages ] ");
+                unused.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+                Log(sb.ToString());
+
                 // Uninstall unused packages and re-check.
                 foreach (var p in unusedPackages)
                 {
                     needToCheck = true;
-                    Debug.LogFormat("[Resolver] Uninstall unused package {0}:{1} from {2}", p.name, p.version, p.path);
+                    Log("Uninstall the unused package '{0}@{1}'", p.name, p.version);
                     FileUtil.DeleteFileOrDirectory(p.url);
                 }
             }
@@ -69,6 +98,7 @@ namespace Coffee.GitDependencyResolver
             var needToRefresh = false;
             var needToCheck = true;
 
+            Log("Start dependency resolution.");
             AssetDatabase.StartAssetEditing();
             while (needToCheck)
             {
@@ -100,6 +130,18 @@ namespace Coffee.GitDependencyResolver
                     requestedPackages.Add(dependency);
                 }
 
+                var sb = new StringBuilder();
+                sb.AppendLine("############## StartResolve ##############");
+                sb.AppendLine("\n[ installedPackages ] ");
+                installedPackages.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+
+                sb.AppendLine("\n[ dependencies ] ");
+                dependencies.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+
+                sb.AppendLine("\n[ requestedPackages ] ");
+                requestedPackages.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+                Log(sb.ToString());
+
                 // No packages is requested to install.
                 if (requestedPackages.Count == 0)
                     break;
@@ -111,12 +153,14 @@ namespace Coffee.GitDependencyResolver
                     var clonePath = Path.GetTempFileName() + "_";
 
                     EditorUtility.DisplayProgressBar("Clone Package", string.Format("Cloning {0}@{1}", package.name, package.version), i / (float) requestedPackages.Count);
+                    Log("Cloning '{0}@{1}' ({2}, {3})", package.name, package.version, package.rev, package.path);
                     var success = GitUtils.ClonePackage(package, clonePath);
 
                     // Check cloned
                     if (!success)
                     {
                         needToCheck = false;
+                        Error("Failed to install a package '{0}@{1}': Clone failed.", package.name, package.version);
                         continue;
                     }
 
@@ -125,6 +169,7 @@ namespace Coffee.GitDependencyResolver
                     PackageMeta newPackage = PackageMeta.FromPackageDir(pkgPath);
                     if (!Directory.Exists(pkgPath) || newPackage == null || newPackage.name != package.name)
                     {
+                        Error("Failed to install a package '{0}@{1}': Different package name. {2} != {3}", package.name, package.version, newPackage.name, package.name);
                         needToCheck = false;
                         continue;
                     }
@@ -136,6 +181,7 @@ namespace Coffee.GitDependencyResolver
                     DirUtils.Move(pkgPath, installPath, p => p != ".git");
                     AssetDatabase.ImportAsset(installPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ImportRecursive);
 
+                    Log("A package '{0}@{1}' has been installed.", package.name, package.version);
                     needToRefresh = true;
                 }
 
@@ -144,6 +190,7 @@ namespace Coffee.GitDependencyResolver
 
             AssetDatabase.StopAssetEditing();
 
+            Log("Dependency resolution complete. refresh = {0}", needToRefresh);
             if (needToRefresh)
             {
                 // Recompile the packages
