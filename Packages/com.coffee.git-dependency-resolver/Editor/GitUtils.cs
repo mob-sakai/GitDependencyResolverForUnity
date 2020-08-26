@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Coffee.GitDependencyResolver
 {
+    //TODO: It's better to implement it in javascript.
     internal static class GitUtils
     {
         private static readonly StringBuilder s_sbError = new StringBuilder();
@@ -16,11 +17,32 @@ namespace Coffee.GitDependencyResolver
         public static bool ClonePackage(PackageMeta package, string clonePath)
         {
             Directory.CreateDirectory(clonePath);
-            var args = string.Format("clone --depth=1 --branch {0} --single-branch {1} {2}", package.rev, package.url, clonePath);
-            return ExecuteGitCommand(args);
+
+            ExecuteGitCommand("init", dir: clonePath);
+            ExecuteGitCommand("remote add origin " + package.repository, dir: clonePath);
+            if (!string.IsNullOrEmpty(package.path))
+            {
+                ExecuteGitCommand("config core.sparsecheckout true", dir: clonePath);
+                File.WriteAllText(Path.Combine(clonePath, ".git/info/sparse-checkout"), package.path);
+            }
+
+            var revision = !string.IsNullOrEmpty(package.hash)
+                ? package.hash
+                : !string.IsNullOrEmpty(package.revision)
+                    ? package.revision
+                    : "HEAD";
+
+            return
+                ExecuteGitCommand("fetch --depth 1 origin " + revision, dir: clonePath)
+                && ExecuteGitCommand("reset --hard FETCH_HEAD", dir: clonePath)
+                && ExecuteGitCommand("rev-parse HEAD", (success, output) =>
+                {
+                    if (!success) return;
+                    package.hash = output.Trim();
+                }, dir: clonePath);
         }
 
-        static bool ExecuteGitCommand(string args, GitCommandCallback callback = null, bool waitForExit = true)
+        static bool ExecuteGitCommand(string args, GitCommandCallback callback = null, bool waitForExit = true, string dir = ".")
         {
             var startInfo = new System.Diagnostics.ProcessStartInfo
             {
@@ -30,6 +52,7 @@ namespace Coffee.GitDependencyResolver
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
+                WorkingDirectory = dir,
             };
 
             var launchProcess = System.Diagnostics.Process.Start(startInfo);

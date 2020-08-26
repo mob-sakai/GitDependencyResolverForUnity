@@ -95,6 +95,7 @@ namespace Coffee.GitDependencyResolver
                 {
                     needToCheck = true;
                     Log("Uninstall the unused package '{0}@{1}'", p.name, p.version);
+                    PackageMeta.GitUnlock(p);
                     FileUtil.DeleteFileOrDirectory(p.repository);
                 }
             }
@@ -106,6 +107,7 @@ namespace Coffee.GitDependencyResolver
             var needToCheck = true;
 
             Log("Start dependency resolution.");
+            PackageMeta.LoadGitLock();
             AssetDatabase.StartAssetEditing();
             while (needToCheck)
             {
@@ -186,16 +188,18 @@ namespace Coffee.GitDependencyResolver
                     DirUtils.Delete(installPath);
                     DirUtils.Create(installPath);
                     DirUtils.Move(pkgPath, installPath, p => p != ".git");
-                    AssetDatabase.ImportAsset(installPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ImportRecursive);
 
                     Log("A package '{0}@{1}' has been installed.", package.name, package.version);
                     needToRefresh = true;
+                    AssetDatabase.ImportAsset(installPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ImportRecursive);
+                    PackageMeta.GitLock(package);
                 }
 
                 EditorUtility.ClearProgressBar();
             }
 
             AssetDatabase.StopAssetEditing();
+            PackageMeta.SaveGitLock();
 
             Log("Dependency resolution complete. refresh = {0}", needToRefresh);
             if (needToRefresh)

@@ -1,10 +1,38 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace Coffee.GitDependencyResolver
 {
+    [Serializable]
+    internal class GitLock
+    {
+        public List<Entry> dependencies = new List<Entry>();
+
+        [Serializable]
+        internal struct Entry
+        {
+            public string name;
+            public string hash;
+            public string url;
+
+            public Entry(PackageMeta package)
+            {
+                name = package.name;
+                hash = package.hash;
+                url = package.url;
+            }
+
+            public bool IsValid(PackageMeta package)
+            {
+                return name == package.name && url == package.url;
+            }
+        }
+    }
+
     internal class PackageMeta
     {
 #if NETSTANDARD
@@ -12,6 +40,8 @@ namespace Coffee.GitDependencyResolver
 #else
         const RegexOptions k_RegOption = RegexOptions.CultureInvariant | RegexOptions.Compiled | RegexOptions.ExplicitCapture;
 #endif
+        private const string k_GitLockFile = "Packages/packages-lock.git.json";
+
         private static readonly Regex s_PackageUrlReg =
             new Regex(
                 @"^(git\+)?" +
@@ -26,6 +56,8 @@ namespace Coffee.GitDependencyResolver
                 @"(git@|git://|http://|https://|ssh://)",
                 k_RegOption);
 
+        private static readonly GitLock s_GitLock = new GitLock();
+
         public string name { get; private set; }
         internal SemVersion version { get; private set; }
         public string revision { get; private set; }
@@ -33,6 +65,8 @@ namespace Coffee.GitDependencyResolver
         public string path { get; private set; }
         public PackageMeta[] dependencies { get; private set; }
         public PackageMeta[] gitDependencies { get; private set; }
+        public string hash { get; set; }
+        public string url { get; set; }
 
         private PackageMeta()
         {
@@ -40,6 +74,8 @@ namespace Coffee.GitDependencyResolver
             repository = "";
             revision = "";
             path = "";
+            hash = "";
+            url = "";
             version = new SemVersion(0);
             dependencies = new PackageMeta [0];
             gitDependencies = new PackageMeta [0];
@@ -126,6 +162,8 @@ namespace Coffee.GitDependencyResolver
 
             package.repository = m.Groups["repository"].Value;
             package.revision = m.Groups["revision"].Value;
+            package.url = url;
+            package.hash = s_GitLock.dependencies.FirstOrDefault(x => x.IsValid(package)).hash ?? "";
 
             // Get version from revision/branch/tag
             package.SetVersion(package.revision);
@@ -182,7 +220,39 @@ namespace Coffee.GitDependencyResolver
 
         public override string ToString()
         {
-            return string.Format("{0}@{1} ({2}) [{3}]", name, version, revision, path);
+            return string.Format("{0}@{1} ({2}) [{3}] <{4}>", name, version, revision, path, url);
+        }
+
+        public static void LoadGitLock()
+        {
+            var text = File.Exists(k_GitLockFile)
+                ? File.ReadAllText(k_GitLockFile)
+                : "{}";
+
+            JsonUtility.FromJsonOverwrite(text, s_GitLock);
+        }
+
+        public static void GitLock(PackageMeta package)
+        {
+            s_GitLock.dependencies.RemoveAll(e => e.name == package.name);
+            s_GitLock.dependencies.Add(new GitLock.Entry(package));
+        }
+
+        public static void GitUnlock(PackageMeta package)
+        {
+            s_GitLock.dependencies.RemoveAll(e => e.name == package.name);
+        }
+
+        public static void SaveGitLock()
+        {
+            var text = File.Exists(k_GitLockFile)
+                ? File.ReadAllText(k_GitLockFile)
+                : "{}";
+
+            var text2 = JsonUtility.ToJson(s_GitLock, true);
+            if (text == text2) return;
+
+            File.WriteAllText(k_GitLockFile, text2);
         }
     }
 }
