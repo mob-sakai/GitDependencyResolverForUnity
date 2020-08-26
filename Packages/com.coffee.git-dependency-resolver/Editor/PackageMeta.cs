@@ -32,6 +32,7 @@ namespace Coffee.GitDependencyResolver
         public string url { get; private set; }
         public string path { get; private set; }
         public PackageMeta[] dependencies { get; private set; }
+        public PackageMeta[] gitDependencies { get; private set; }
 
         private PackageMeta()
         {
@@ -41,6 +42,7 @@ namespace Coffee.GitDependencyResolver
             path = "";
             version = new SemVersion(0);
             dependencies = new PackageMeta [0];
+            gitDependencies = new PackageMeta [0];
         }
 
         public static PackageMeta FromPackageJson(string filePath)
@@ -78,6 +80,17 @@ namespace Coffee.GitDependencyResolver
                 else
                 {
                     package.dependencies = new PackageMeta[0];
+                }
+
+                if (dict.TryGetValue("gitDependencies", out obj))
+                {
+                    package.gitDependencies = (obj as Dictionary<string, object>)
+                        .Select(x => FromNameAndUrl(x.Key, (string) x.Value))
+                        .ToArray();
+                }
+                else
+                {
+                    package.gitDependencies = new PackageMeta[0];
                 }
 
                 return package;
@@ -159,7 +172,7 @@ namespace Coffee.GitDependencyResolver
 
         public IEnumerable<PackageMeta> GetAllDependencies()
         {
-            return dependencies;
+            return gitDependencies.Concat(dependencies);
         }
 
         public string GetDirectoryName()
