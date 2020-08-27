@@ -95,7 +95,7 @@ namespace Coffee.GitDependencyResolver
                 {
                     needToCheck = true;
                     Log("Uninstall the unused package '{0}@{1}'", p.name, p.version);
-                    FileUtil.DeleteFileOrDirectory(p.url);
+                    FileUtil.DeleteFileOrDirectory(p.repository);
                 }
             }
         }
@@ -118,7 +118,7 @@ namespace Coffee.GitDependencyResolver
                 // Collect all dependencies.
                 var dependencies = installedPackages
                     .SelectMany(x => x.GetAllDependencies()) // Get all dependencies
-                    .Where(x => !string.IsNullOrEmpty(x.url)) // path (url) is available
+                    .Where(x => !string.IsNullOrEmpty(x.repository)) // path (url) is available
                     .ToArray();
 
                 // Check all dependencies.
@@ -160,7 +160,7 @@ namespace Coffee.GitDependencyResolver
                     var clonePath = Path.GetTempFileName() + "_";
 
                     EditorUtility.DisplayProgressBar("Clone Package", string.Format("Cloning {0}@{1}", package.name, package.version), i / (float) requestedPackages.Count);
-                    Log("Cloning '{0}@{1}' ({2}, {3})", package.name, package.version, package.rev, package.path);
+                    Log("Cloning '{0}@{1}' ({2}, {3})", package.name, package.version, package.revision, package.path);
                     var success = GitUtils.ClonePackage(package, clonePath);
 
                     // Check cloned

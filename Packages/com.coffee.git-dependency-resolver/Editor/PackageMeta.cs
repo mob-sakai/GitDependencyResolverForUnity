@@ -15,9 +15,9 @@ namespace Coffee.GitDependencyResolver
         private static readonly Regex s_PackageUrlReg =
             new Regex(
                 @"^(git\+)?" +
-                @"(?<url>[^#?]*)" +
+                @"(?<repository>[^#?]*)" +
                 @"(\?(?<query>[^#]*))?" +
-                @"(#(?<rev>.*))?",
+                @"(#(?<revision>.*))?",
                 k_RegOption);
 
         private static readonly Regex s_IsGitReg =
@@ -28,8 +28,8 @@ namespace Coffee.GitDependencyResolver
 
         public string name { get; private set; }
         internal SemVersion version { get; private set; }
-        public string rev { get; private set; }
-        public string url { get; private set; }
+        public string revision { get; private set; }
+        public string repository { get; private set; }
         public string path { get; private set; }
         public PackageMeta[] dependencies { get; private set; }
         public PackageMeta[] gitDependencies { get; private set; }
@@ -37,8 +37,8 @@ namespace Coffee.GitDependencyResolver
         private PackageMeta()
         {
             name = "";
-            url = "";
-            rev = "";
+            repository = "";
+            revision = "";
             path = "";
             version = new SemVersion(0);
             dependencies = new PackageMeta [0];
@@ -56,7 +56,7 @@ namespace Coffee.GitDependencyResolver
 
                 string dir = Path.GetDirectoryName(filePath);
                 Dictionary<string, object> dict = Json.Deserialize(File.ReadAllText(filePath)) as Dictionary<string, object>;
-                PackageMeta package = new PackageMeta() {url = dir,};
+                PackageMeta package = new PackageMeta() {repository = dir,};
 
 
                 object obj;
@@ -104,7 +104,7 @@ namespace Coffee.GitDependencyResolver
         public static PackageMeta FromPackageDir(string dir)
         {
             var package = FromPackageJson(dir + "/package.json");
-            package.SetVersion(package.rev);
+            package.SetVersion(package.revision);
             return package;
         }
 
@@ -124,11 +124,11 @@ namespace Coffee.GitDependencyResolver
             Match m = s_PackageUrlReg.Match(url);
             if (!m.Success) return package;
 
-            package.url = m.Groups["url"].Value;
-            package.rev = m.Groups["rev"].Value;
+            package.repository = m.Groups["repository"].Value;
+            package.revision = m.Groups["revision"].Value;
 
             // Get version from revision/branch/tag
-            package.SetVersion(package.rev);
+            package.SetVersion(package.revision);
 
             package.ProcessUrlQuery(m.Groups["query"].Value);
             return package;
@@ -182,7 +182,7 @@ namespace Coffee.GitDependencyResolver
 
         public override string ToString()
         {
-            return string.Format("{0}@{1} ({2}) [{3}]", name, version, rev, path);
+            return string.Format("{0}@{1} ({2}) [{3}]", name, version, revision, path);
         }
     }
 }

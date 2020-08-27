@@ -40,9 +40,9 @@ namespace Coffee.GitDependencyResolver
 
             Assert.AreEqual(p.name, "com.test.package");
             Assert.AreEqual(p.version, new SemVersion(0));
-            Assert.AreEqual(p.url, "https://github.com/mob-sakai/com.test.package.git");
+            Assert.AreEqual(p.repository, "https://github.com/mob-sakai/com.test.package.git");
             Assert.AreEqual(p.path, "");
-            Assert.AreEqual(p.rev, "");
+            Assert.AreEqual(p.revision, "");
         }
 
         [Test]
@@ -52,9 +52,9 @@ namespace Coffee.GitDependencyResolver
 
             Assert.AreEqual(p.name, "com.test.package");
             Assert.AreEqual(p.version, new SemVersion(0));
-            Assert.AreEqual(p.url, "https://github.com/mob-sakai/com.test.package.git");
+            Assert.AreEqual(p.repository, "https://github.com/mob-sakai/com.test.package.git");
             Assert.AreEqual(p.path, "Packages/com.test.package");
-            Assert.AreEqual(p.rev, "");
+            Assert.AreEqual(p.revision, "");
         }
 
         [Test]
@@ -64,9 +64,9 @@ namespace Coffee.GitDependencyResolver
 
             Assert.AreEqual(p.name, "com.test.package");
             Assert.AreEqual(p.version, new SemVersion(0));
-            Assert.AreEqual(p.url, "https://github.com/mob-sakai/com.test.package.git");
+            Assert.AreEqual(p.repository, "https://github.com/mob-sakai/com.test.package.git");
             Assert.AreEqual(p.path, "Packages/com.test.package");
-            Assert.AreEqual(p.rev, "upm");
+            Assert.AreEqual(p.revision, "upm");
         }
 
         [Test]
@@ -76,9 +76,9 @@ namespace Coffee.GitDependencyResolver
 
             Assert.AreEqual(p.name, "com.test.package");
             Assert.AreEqual(p.version, SemVersion.Parse("1.2.3-preview.4"));
-            Assert.AreEqual(p.url, "https://github.com/mob-sakai/com.test.package.git");
+            Assert.AreEqual(p.repository, "https://github.com/mob-sakai/com.test.package.git");
             Assert.AreEqual(p.path, "Packages/com.test.package");
-            Assert.AreEqual(p.rev, "1.2.3-preview.4");
+            Assert.AreEqual(p.revision, "1.2.3-preview.4");
         }
 
 
@@ -89,9 +89,9 @@ namespace Coffee.GitDependencyResolver
 
             Assert.AreEqual(p.name, "com.test.package");
             Assert.AreEqual(p.version, new SemVersion(0));
-            Assert.AreEqual(p.url, "https://github.com/mob-sakai/com.test.package.git");
+            Assert.AreEqual(p.repository, "https://github.com/mob-sakai/com.test.package.git");
             Assert.AreEqual(p.path, "");
-            Assert.AreEqual(p.rev, "upm");
+            Assert.AreEqual(p.revision, "upm");
         }
 
         [Test]
@@ -101,9 +101,9 @@ namespace Coffee.GitDependencyResolver
 
             Assert.AreEqual(p.name, "com.test.package");
             Assert.AreEqual(p.version, SemVersion.Parse("1.2.3-preview.4"));
-            Assert.AreEqual(p.url, "https://github.com/mob-sakai/com.test.package.git");
+            Assert.AreEqual(p.repository, "https://github.com/mob-sakai/com.test.package.git");
             Assert.AreEqual(p.path, "");
-            Assert.AreEqual(p.rev, "1.2.3-preview.4");
+            Assert.AreEqual(p.revision, "1.2.3-preview.4");
         }
     }
 }
