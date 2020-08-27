@@ -140,6 +140,8 @@ namespace Coffee.GitDependencyResolver
         public static PackageMeta FromPackageDir(string dir)
         {
             var package = FromPackageJson(dir + "/package.json");
+            if (package == null) return null;
+
             package.SetVersion(package.revision);
             return package;
         }
