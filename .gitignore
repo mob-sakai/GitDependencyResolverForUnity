@@ -38,3 +38,4 @@ Assets/Plugins/
 .idea/
 Packages/.*/
 Packages/.*.meta
+.test

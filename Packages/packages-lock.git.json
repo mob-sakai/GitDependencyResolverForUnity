@@ -2,8 +2,8 @@
     "dependencies": [
         {
             "name": "com.coffee.ugd.math",
-            "hash": "46720ffb837eb050452d5e78503ddd08cfe8ff5c",
-            "url": "https://github.com/mob-sakai/UnityGitDependencyTest.git?path=Packages/math"
+            "hash": "4b47c547531b65d56f3f7e629830e574efa2b8c6",
+            "url": "https://github.com/mob-sakai/UnityGitDependencyTest.git?path=Packages/math#package-v1"
         }
     ]
 }
