@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# UNITY_APP=/Applications/Unity/Hub/Editor/`cat ProjectSettings/ProjectVersion.txt | cut -d ' '  -f 2`/Unity.app/Contents/MacOS/Unity
-# UNITY_APP=/Applications/Unity/Hub/Editor/2018.4.22f1/Unity.app/Contents/MacOS/Unity
-# UNITY_APP=/Applications/Unity/Hub/Editor/2019.4.4f1/Unity.app/Contents/MacOS/Unity
+[ -e $1 ] || ( echo "not found unity" && exit 1 )
 UNITY_APP=$1
 
 git --no-pager diff -U1 -- ./Packages/com.coffee.git-dependency-resolver
@@ -29,28 +27,17 @@ echo "testDir > ${testDir}"
 echo ""
 
 # 1. run init
+rm -rf Packages/.com* Library
 run_test 1_run_init
 
-# 1-2. run again
-run_test 1-2_run_again
+# 2. run after remove auto-installed packages
+rm -rf Packages/.com*
+run_test 2_run_after_remove_auto_installed_packages
 
-# 3. run after remove auto-installed packages
-rm -rf ./Packages/.com*
-run_test 3_run_after_remove_auto_installed_packages
+# 3. run after remove Library/ScriptAssemblies
+rm -rf Library/ScriptAssemblies
+run_test 3_run_after_remove_library_assemblies
 
-# 3-2. run again
-run_test 3-2_run_again
-
-# # 4. run after remove Library/ScriptAssemblies packages
-# rm -rf success_* Library/ScriptAssemblies
-# run_test 4_run_after_remove_library_assemblies
-
-# # 4-2. run again
-# run_test 4-2_run_again
-
-# # 2. run after remove library
-# rm -rf ./Library
-# run_test 2_run_after_remove_library
-
-# # 2-2. run again
-# run_test 2-2_run_again
+# 4. run after remove library
+rm -rf Library
+run_test 4_run_after_remove_library

@@ -1,6 +1,8 @@
 {
+  "gitDependencies": {
+    "com.coffee.ugd.translate-it": "https://github.com/mob-sakai/UnityGitDependencyTest.git?path=/packages/translate-it#package-v1.1"
+  },
   "dependencies": {
-    "com.coffee.ugd.translate-it": "https://github.com/mob-sakai/UnityGitDependencyTest.git#translate-it",
     "com.unity.ads": "2.0.8",
     "com.unity.analytics": "3.2.2",
     "com.unity.collab-proxy": "1.2.15",
@@ -37,11 +39,5 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  },
-  "lock": {
-    "com.coffee.ugd.translate-it": {
-      "hash": "4fa784fd36aa76fb7a50405cc27b4eea1082fe2c",
-      "revision": "translate-it"
-    }
   }
 }

@@ -1,6 +1,11 @@
 {
     "dependencies": [
         {
+            "name": "com.coffee.ugd.translate-it",
+            "hash": "718004fe07b859205c4de012820e2e6b5a2fbd01",
+            "url": "https://github.com/mob-sakai/UnityGitDependencyTest.git?path=/packages/translate-it#package-v1.1"
+        },
+        {
             "name": "com.coffee.ugd.math",
             "hash": "4b47c547531b65d56f3f7e629830e574efa2b8c6",
             "url": "https://github.com/mob-sakai/UnityGitDependencyTest.git?path=Packages/math#package-v1"
