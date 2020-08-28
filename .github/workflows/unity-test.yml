@@ -38,6 +38,7 @@ jobs:
 
       # Activate Unity Editor
       - name: Activate Unity Editor
+        id: activation
         run: |
           # Clone ulfs.
           apt update && apt install git -y
@@ -84,21 +85,46 @@ jobs:
       # Checkout
       - uses: actions/checkout@v2
 
-      # Build and execute method
-      - name: Build and execute method
+      # Test 1: Build and execute method
+      - name: "Test 1: Build and execute method"
+        if: always() && steps.activation.conclusion == 'success'
         working-directory: ${{ env.WORKING_DIR }}
         run: |
+          rm -rf success_* Packages/.com* Library
           /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute
 
-      # Validate
-      - name: Validate
+          [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
+          [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
+
+      # Test 2: Run after remove auto-installed packages
+      - name: "Test 2: Run after remove auto-installed packages"
+        if: always() && steps.activation.conclusion == 'success'
         working-directory: ${{ env.WORKING_DIR }}
         run: |
-          if [ ! -e success_compile ]; then
-            echo "::error:: Compile Script Error"
-            exit 1
-          fi
-          if [ ! -e success_execute ]; then
-            echo "::error:: Execute Method Error"
-            exit 1
-          fi
+          rm -rf success_* Packages/.com*
+          /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute
+
+          [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
+          [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
+
+      # Test 3: Run after remove Library/ScriptAssemblies
+      - name: "Test 3: Run after remove Library/ScriptAssemblies"
+        if: always() && steps.activation.conclusion == 'success'
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          rm -rf success_* Library/ScriptAssemblies
+          /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute
+
+          [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
+          [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
+
+      # Test 4: Run after remove Library
+      - name: "Test 4: Run after remove Library"
+        if: always() && steps.activation.conclusion == 'success'
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          rm -rf success_* Library
+          /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute
+
+          [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
+          [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
