@@ -1,125 +1,212 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
-namespace Coffee.PackageManager.DependencyResolver
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("GitDependencyResolver.EditorTests")]
+
+namespace Coffee.GitDependencyResolver
 {
-	[InitializeOnLoad]
-	public static class GitDependencyResolver
-	{
-		const System.StringComparison Ordinal = System.StringComparison.Ordinal;
-	
-		static GitDependencyResolver ()
-		{
-			EditorApplication.projectChanged += StartResolve;
-			StartResolve ();
-		}
-		
-		static PackageMeta[] GetInstalledPackages()
-		{
-			//return Directory.GetDirectories ("./Library/PackageCache")
-			//	.Concat (Directory.GetDirectories ("./Packages"))
-			//	.Select (PackageMeta.FromPackageDir)    // Convert to PackageMeta
-			//	.Where (x => x != null)                 // Skip null
-			//	.ToArray ();
-			return AssetDatabase.GetAllAssetPaths()
-				.Where(x => x.StartsWith("Packages/", Ordinal) && x.EndsWith("/package.json", Ordinal))
-				.Select(PackageMeta.FromPackageJson)	// Convert to PackageMeta
-				.Where (x => x != null)					// Skip null
-				.ToArray();
-		}
+    [InitializeOnLoad]
+    internal static class Resolver
+    {
+        const StringComparison Ordinal = StringComparison.Ordinal;
+        const string k_LogHeader = "<b><color=#2E8B57>[GitResolver]</color></b> ";
 
-		/// <summary>
-		/// Uninstall unused packages (for auto-installed packages)
-		/// </summary>
-		static void UninstallUnusedPackages ()
-		{
-			bool needToCheck = true;
-			while (needToCheck)
-			{
-				needToCheck = false;
-				
-				// Collect all dependencies.
-				var allDependencies = GetInstalledPackages()
-					.SelectMany (x => x.dependencies)               // Get all dependencies
-					.ToArray ();
-					
-				PackageMeta[] autoInstalledPackages = Directory.GetDirectories ("./Packages")
-					.Where (x => Path.GetFileName(x).StartsWith (".", Ordinal))         // Directory name starts with '.'. This is 'auto-installed package'
-					.Select (PackageMeta.FromPackageDir)    // Convert to PackageMeta
-					.Where (x => x != null)                 // Skip null
-					.ToArray ();
-				
-				// Collect unused pakages.
-				var unusedPackages = autoInstalledPackages
-					.Where (x => Path.GetFileName(x.path).StartsWith (".", Ordinal))         // Directory name starts with '.'. This is 'auto-installed package'
-					.Where (x => !allDependencies.Any (y => y.name == x.name && y.version == x.version))   // No depended from other packages
-					;
+        [System.Diagnostics.Conditional("GDR_LOG")]
+        static void Log(string format, params object[] args)
+        {
+            UnityEngine.Debug.LogFormat(k_LogHeader + format, args);
+        }
 
-				// Uninstall unused packages and re-check.
-				foreach (var p in unusedPackages)
-				{
-					needToCheck = true;
-					Debug.LogFormat ("[Resolver] Uninstall unused package {0}:{1} from {2}", p.name, p.version,p.path);
-					FileUtil.DeleteFileOrDirectory (p.path);
-				}
-			}
-		}
+        static void Error(string format, params object[] args)
+        {
+            UnityEngine.Debug.LogErrorFormat(k_LogHeader + format, args);
+        }
 
-		static void StartResolve ()
-		{
-			// Uninstall unused packages (for auto-installed packages)
-			UninstallUnusedPackages ();
+        static Resolver()
+        {
+            Log("Init");
 
-			// Collect all installed pakages.
-			PackageMeta[] installedPackages = GetInstalledPackages();
+            EditorApplication.projectChanged += StartResolve;
+            StartResolve();
+        }
 
-			// Collect all dependencies.
-			var dependencies = installedPackages
-				.SelectMany (x => x.dependencies)				// Get all dependencies
-				.Where (x => !string.IsNullOrEmpty (x.path));	// path (url) is available
+        private static PackageMeta[] GetInstalledPackages()
+        {
+            return Directory.GetDirectories("./Library/PackageCache")
+                .Concat(Directory.GetDirectories("./Packages"))
+                .Select(PackageMeta.FromPackageDir) // Convert to PackageMeta
+                .Concat(new[] {PackageMeta.FromPackageJson("./Packages/manifest.json")})
+                .Where(x => x != null) // Skip null
+                .ToArray();
+        }
 
-			List<PackageMeta> requestedPackages = new List<PackageMeta> ();
+        /// <summary>
+        /// Uninstall unused packages (for auto-installed packages)
+        /// </summary>
+        private static void UninstallUnusedPackages()
+        {
+            Log("Find for unused automatically installed packages");
+            var needToCheck = true;
+            while (needToCheck)
+            {
+                needToCheck = false;
 
-			// Check all dependencies.
-			foreach (var dependency in dependencies)
-			{
-				// Is the depended package installed already?
-				bool isInstalled = installedPackages
-						.Concat (requestedPackages)
-						.Any (x => dependency.name == x.name && dependency.version <= x.version);
+                // Collect all dependencies.
+                var allDependencies = GetInstalledPackages()
+                    .SelectMany(x => x.GetAllDependencies()) // Get all dependencies
+                    .ToArray();
 
-				// Install the depended package later.
-				if (!isInstalled)
-				{
-					requestedPackages.RemoveAll (x => dependency.name == x.name);
-					requestedPackages.Add (dependency);
-				}
-			}
+                PackageMeta[] autoInstalledPackages = Directory.GetDirectories("./Packages")
+                    .Where(x => Path.GetFileName(x).StartsWith(".", Ordinal)) // Directory name starts with '.'. This is 'auto-installed package'
+                    .Select(PackageMeta.FromPackageDir) // Convert to PackageMeta
+                    .Where(x => x != null) // Skip null
+                    .ToArray();
 
-			// No packages is requested to install.
-			if (requestedPackages.Count == 0)
-				return;
+                var used = autoInstalledPackages
+                    .Where(x => allDependencies.Any(y => y.name == x.name)) // Depended from other packages
+                    .GroupBy(x => x.name) // Grouped by package name
+                    .Select(x => x.OrderByDescending(y => y.version).First()) // Latest package
+                    .ToArray();
 
-			// Install all requested packages.
-			for (int i = 0; i < requestedPackages.Count; i++)
-			{
-				PackageMeta meta = requestedPackages [i];
-				EditorUtility.DisplayProgressBar ("Clone Package", string.Format ("Cloning {0}:{1}", meta.name, meta.version), i / (float)requestedPackages.Count);
-				Debug.LogFormat ("[Resolver] Cloning {0}: {1}", meta.name, meta.version);
-				bool success = GitUtils.ClonePackage (meta);
-				if (!success)
-				{
-					Debug.LogFormat ("[Resolver] Failed to clone {0}:{1}", meta.name, meta.version);
-					break;
-				}
-			}
+                // Collect unused pakages.
+                var unused = autoInstalledPackages
+                    .Except(used) // Exclude used packages
+                    .ToArray();
 
-			// Recompile the packages
-			EditorUtility.ClearProgressBar ();
-			EditorApplication.delayCall += AssetDatabase.Refresh;
-		}
-	}
+                var sb = new StringBuilder();
+                sb.AppendLine("############## UninstallUnusedPackages ##############");
+                sb.AppendLine("\n[ allDependencies ] ");
+                allDependencies.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+
+                sb.AppendLine("\n[ autoInstalledPackages ] ");
+                autoInstalledPackages.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+
+                sb.AppendLine("\n[ unusedPackages ] ");
+                unused.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+                Log(sb.ToString());
+
+                // Uninstall unused packages and re-check.
+                foreach (var p in unused)
+                {
+                    needToCheck = true;
+                    Log("Uninstall the unused package '{0}@{1}'", p.name, p.version);
+                    PackageMeta.GitUnlock(p);
+                    FileUtil.DeleteFileOrDirectory(p.repository);
+                }
+            }
+        }
+
+        private static void StartResolve()
+        {
+            var needToRefresh = false;
+            var needToCheck = true;
+
+            Log("Start dependency resolution.");
+            PackageMeta.LoadGitLock();
+            AssetDatabase.StartAssetEditing();
+            while (needToCheck)
+            {
+                // Uninstall unused packages (for auto-installed packages)
+                UninstallUnusedPackages();
+
+                // Collect all installed packages.
+                PackageMeta[] installedPackages = GetInstalledPackages();
+
+                // Collect all dependencies.
+                var dependencies = installedPackages
+                    .SelectMany(x => x.GetAllDependencies()) // Get all dependencies
+                    .Where(x => !string.IsNullOrEmpty(x.repository)) // path (url) is available
+                    .ToArray();
+
+                // Check all dependencies.
+                var requestedPackages = new List<PackageMeta>();
+                foreach (var dependency in dependencies)
+                {
+                    // Is the depended package installed already?
+                    var isInstalled = installedPackages
+                        .Concat(requestedPackages)
+                        .Any(x => dependency.name == x.name && (dependency.version != null && dependency.version <= x.version || x.version == null));
+
+                    if (isInstalled) continue;
+
+                    // Install the depended package later.
+                    requestedPackages.RemoveAll(x => dependency.name == x.name);
+                    requestedPackages.Add(dependency);
+                }
+
+                var sb = new StringBuilder();
+                sb.AppendLine("############## StartResolve ##############");
+                sb.AppendLine("\n[ installedPackages ] ");
+                installedPackages.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+
+                sb.AppendLine("\n[ dependencies ] ");
+                dependencies.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+
+                sb.AppendLine("\n[ requestedPackages ] ");
+                requestedPackages.ToList().ForEach(p => sb.AppendLine(p.ToString()));
+                Log(sb.ToString());
+
+                // No packages is requested to install.
+                if (requestedPackages.Count == 0)
+                    break;
+
+                // Install all requested packages.
+                for (var i = 0; i < requestedPackages.Count; i++)
+                {
+                    PackageMeta package = requestedPackages[i];
+                    var clonePath = Path.GetTempFileName() + "_";
+
+                    EditorUtility.DisplayProgressBar("Clone Package", string.Format("Cloning {0}@{1}", package.name, package.version), i / (float) requestedPackages.Count);
+                    Log("Cloning '{0}@{1}' ({2}, {3})", package.name, package.version, package.revision, package.path);
+                    var success = GitUtils.ClonePackage(package, clonePath);
+
+                    // Check cloned
+                    if (!success)
+                    {
+                        needToCheck = false;
+                        Error("Failed to install a package '{0}@{1}': Clone failed.", package.name, package.version);
+                        continue;
+                    }
+
+                    // Check package path (query)
+                    var pkgPath = package.GetPackagePath(clonePath);
+                    PackageMeta newPackage = PackageMeta.FromPackageDir(pkgPath);
+                    if (!Directory.Exists(pkgPath) || newPackage == null || newPackage.name != package.name)
+                    {
+                        Error("Failed to install a package '{0}@{1}': Different package name. {2} != {3}", package.name, package.version, newPackage.name, package.name);
+                        needToCheck = false;
+                        continue;
+                    }
+
+                    // Install as an embed package
+                    var installPath = "Packages/." + newPackage.GetDirectoryName();
+                    DirUtils.Delete(installPath);
+                    DirUtils.Create(installPath);
+                    DirUtils.Move(pkgPath, installPath, p => p != ".git");
+
+                    Log("A package '{0}@{1}' has been installed.", package.name, package.version);
+                    needToRefresh = true;
+                    AssetDatabase.ImportAsset(installPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ImportRecursive);
+                    PackageMeta.GitLock(package);
+                }
+
+                EditorUtility.ClearProgressBar();
+            }
+
+            AssetDatabase.StopAssetEditing();
+            PackageMeta.SaveGitLock();
+
+            Log("Dependency resolution complete. refresh = {0}", needToRefresh);
+            if (needToRefresh)
+            {
+                // Recompile the packages
+                AssetDatabase.Refresh();
+            }
+        }
+    }
 }

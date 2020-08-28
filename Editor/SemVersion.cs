@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2013 Max Hauser 
+Copyright (c) 2013 Max Hauser
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 using System;
 #if !NETSTANDARD
 using System.Globalization;
@@ -27,7 +28,7 @@ using System.Security.Permissions;
 #endif
 using System.Text.RegularExpressions;
 
-namespace Coffee.PackageManager.DependencyResolver
+namespace Coffee.GitDependencyResolver
 {
     /// <summary>
     /// A semantic version implementation.
@@ -42,10 +43,10 @@ namespace Coffee.PackageManager.DependencyResolver
     {
         static Regex parseEx =
             new Regex(@"(?<major>\d+)" +
-                @"(\.(?<minor>\d+))?" +
-                @"(\.(?<patch>\d+))?" +
-                @"(\-(?<pre>[0-9A-Za-z\-\.]+))?" +
-                @"(\+(?<build>[0-9A-Za-z\-\.]+))?$",
+                      @"(\.(?<minor>\d+))?" +
+                      @"(\.(?<patch>\d+))?" +
+                      @"(\-(?<pre>[0-9A-Za-z\-\.]+))?" +
+                      @"(\+(?<build>[0-9A-Za-z\-\.]+))?$",
 #if NETSTANDARD
                 RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture);
 #else
@@ -92,7 +93,7 @@ namespace Coffee.PackageManager.DependencyResolver
         /// <summary>
         /// Initializes a new instance of the <see cref="SemVersion"/> class.
         /// </summary>
-        /// <param name="version">The <see cref="System.Version"/> that is used to initialize 
+        /// <param name="version">The <see cref="System.Version"/> that is used to initialize
         /// the Major, Minor, Patch and Build properties.</param>
         public SemVersion(Version version)
         {
@@ -140,7 +141,7 @@ namespace Coffee.PackageManager.DependencyResolver
 
             var minorMatch = match.Groups["minor"];
             int minor = 0;
-            if (minorMatch.Success) 
+            if (minorMatch.Success)
             {
 #if NETSTANDARD
                 minor = int.Parse(minorMatch.Value);
@@ -163,7 +164,7 @@ namespace Coffee.PackageManager.DependencyResolver
                 patch = int.Parse(patchMatch.Value, CultureInfo.InvariantCulture);
 #endif
             }
-            else if (strict) 
+            else if (strict)
             {
                 throw new InvalidOperationException("Invalid version (no patch version given in strict mode)");
             }
@@ -178,8 +179,8 @@ namespace Coffee.PackageManager.DependencyResolver
         /// Parses the specified string to a semantic version.
         /// </summary>
         /// <param name="version">The version string.</param>
-        /// <param name="semver">When the method returns, contains a SemVersion instance equivalent 
-        /// to the version string passed in, if the version string was valid, or <c>null</c> if the 
+        /// <param name="semver">When the method returns, contains a SemVersion instance equivalent
+        /// to the version string passed in, if the version string was valid, or <c>null</c> if the
         /// version string was not valid.</param>
         /// <param name="strict">If set to <c>true</c> minor and patch version are required, else they default to 0.</param>
         /// <returns><c>False</c> when a invalid version string is passed, otherwise <c>true</c>.</returns>
@@ -225,7 +226,7 @@ namespace Coffee.PackageManager.DependencyResolver
         }
 
         /// <summary>
-        /// Make a copy of the current instance with optional altered fields. 
+        /// Make a copy of the current instance with optional altered fields.
         /// </summary>
         /// <param name="major">The major version.</param>
         /// <param name="minor">The minor version.</param>
@@ -301,33 +302,33 @@ namespace Coffee.PackageManager.DependencyResolver
         }
 
         /// <summary>
-        /// Compares the current instance with another object of the same type and returns an integer that indicates 
-        /// whether the current instance precedes, follows, or occurs in the same position in the sort order as the 
+        /// Compares the current instance with another object of the same type and returns an integer that indicates
+        /// whether the current instance precedes, follows, or occurs in the same position in the sort order as the
         /// other object.
         /// </summary>
         /// <param name="obj">An object to compare with this instance.</param>
         /// <returns>
-        /// A value that indicates the relative order of the objects being compared. 
-        /// The return value has these meanings: Value Meaning Less than zero 
-        ///  This instance precedes <paramref name="obj" /> in the sort order. 
+        /// A value that indicates the relative order of the objects being compared.
+        /// The return value has these meanings: Value Meaning Less than zero
+        ///  This instance precedes <paramref name="obj" /> in the sort order.
         ///  Zero This instance occurs in the same position in the sort order as <paramref name="obj" />. i
         ///  Greater than zero This instance follows <paramref name="obj" /> in the sort order.
         /// </returns>
         public int CompareTo(object obj)
         {
-            return CompareTo((SemVersion)obj);
+            return CompareTo((SemVersion) obj);
         }
 
         /// <summary>
-        /// Compares the current instance with another object of the same type and returns an integer that indicates 
-        /// whether the current instance precedes, follows, or occurs in the same position in the sort order as the 
+        /// Compares the current instance with another object of the same type and returns an integer that indicates
+        /// whether the current instance precedes, follows, or occurs in the same position in the sort order as the
         /// other object.
         /// </summary>
         /// <param name="other">An object to compare with this instance.</param>
         /// <returns>
-        /// A value that indicates the relative order of the objects being compared. 
-        /// The return value has these meanings: Value Meaning Less than zero 
-        ///  This instance precedes <paramref name="other" /> in the sort order. 
+        /// A value that indicates the relative order of the objects being compared.
+        /// The return value has these meanings: Value Meaning Less than zero
+        ///  This instance precedes <paramref name="other" /> in the sort order.
         ///  Zero This instance occurs in the same position in the sort order as <paramref name="other" />. i
         ///  Greater than zero This instance follows <paramref name="other" /> in the sort order.
         /// </returns>
@@ -359,8 +360,8 @@ namespace Coffee.PackageManager.DependencyResolver
         /// </summary>
         /// <param name="other">The semantic version.</param>
         /// <returns>
-        /// A value that indicates the relative order of the objects being compared. 
-        /// The return value has these meanings: Value Meaning Less than zero 
+        /// A value that indicates the relative order of the objects being compared.
+        /// The return value has these meanings: Value Meaning Less than zero
         ///  This instance precedes <paramref name="other" /> in the version precedence.
         ///  Zero This instance has the same precedence as <paramref name="other" />. i
         ///  Greater than zero This instance has creater precedence as <paramref name="other" />.
@@ -442,20 +443,20 @@ namespace Coffee.PackageManager.DependencyResolver
             if (ReferenceEquals(this, obj))
                 return true;
 
-            var other = (SemVersion)obj;
+            var other = (SemVersion) obj;
 
             return this.Major == other.Major &&
-                this.Minor == other.Minor &&
-                this.Patch == other.Patch &&
-                string.Equals(this.Prerelease, other.Prerelease, StringComparison.Ordinal) &&
-                string.Equals(this.Build, other.Build, StringComparison.Ordinal);
+                   this.Minor == other.Minor &&
+                   this.Patch == other.Patch &&
+                   string.Equals(this.Prerelease, other.Prerelease, StringComparison.Ordinal) &&
+                   string.Equals(this.Build, other.Build, StringComparison.Ordinal);
         }
 
         /// <summary>
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {
@@ -490,7 +491,7 @@ namespace Coffee.PackageManager.DependencyResolver
         }
 
         /// <summary>
-        /// The override of the equals operator. 
+        /// The override of the equals operator.
         /// </summary>
         /// <param name="left">The left value.</param>
         /// <param name="right">The right value.</param>
@@ -501,7 +502,7 @@ namespace Coffee.PackageManager.DependencyResolver
         }
 
         /// <summary>
-        /// The override of the un-equal operator. 
+        /// The override of the un-equal operator.
         /// </summary>
         /// <param name="left">The left value.</param>
         /// <param name="right">The right value.</param>
@@ -512,7 +513,7 @@ namespace Coffee.PackageManager.DependencyResolver
         }
 
         /// <summary>
-        /// The override of the greater operator. 
+        /// The override of the greater operator.
         /// </summary>
         /// <param name="left">The left value.</param>
         /// <param name="right">The right value.</param>
@@ -523,7 +524,7 @@ namespace Coffee.PackageManager.DependencyResolver
         }
 
         /// <summary>
-        /// The override of the greater than or equal operator. 
+        /// The override of the greater than or equal operator.
         /// </summary>
         /// <param name="left">The left value.</param>
         /// <param name="right">The right value.</param>
@@ -534,7 +535,7 @@ namespace Coffee.PackageManager.DependencyResolver
         }
 
         /// <summary>
-        /// The override of the less operator. 
+        /// The override of the less operator.
         /// </summary>
         /// <param name="left">The left value.</param>
         /// <param name="right">The right value.</param>
@@ -545,7 +546,7 @@ namespace Coffee.PackageManager.DependencyResolver
         }
 
         /// <summary>
-        /// The override of the less than or equal operator. 
+        /// The override of the less than or equal operator.
         /// </summary>
         /// <param name="left">The left value.</param>
         /// <param name="right">The right value.</param>

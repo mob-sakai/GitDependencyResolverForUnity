@@ -1,35 +1,34 @@
 Git Dependency Resolver For Unity
 ===
 
-This plugin resolves git url dependencies in the package for Unity Package Manager.  
-You can use a git url as a package dependency!
+This plugin resolves git-based dependencies in the package for Unity Package Manager.  
+You can use git repositories url as a package dependencies! :+1:
 
 ![logo](https://user-images.githubusercontent.com/12690315/57779067-636a7e00-7760-11e9-8f4a-06bbaee402e8.png)
 
-[![](https://img.shields.io/github/release/mob-sakai/GitDependencyResolverForUnity.svg?label=latest%20version)](https://github.com/mob-sakai/GitDependencyResolverForUnity/releases)
+[![](https://img.shields.io/npm/v/com.coffee.git-dependency-resolver?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.coffee.git-dependency-resolver/)
+[![](https://img.shields.io/github/v/release/mob-sakai/GitDependencyResolverForUnity?include_prereleases)](https://github.com/mob-sakai/GitDependencyResolverForUnity/releases)
 [![](https://img.shields.io/github/release-date/mob-sakai/GitDependencyResolverForUnity.svg)](https://github.com/mob-sakai/GitDependencyResolverForUnity/releases)
-![](https://img.shields.io/badge/unity-2018%20or%20later-green.svg)
+![](https://img.shields.io/badge/unity-2018.3%20or%20later-green.svg)
 [![](https://img.shields.io/github/license/mob-sakai/GitDependencyResolverForUnity.svg)](https://github.com/mob-sakai/GitDependencyResolverForUnity/blob/upm/LICENSE.txt)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com)
 [![](https://img.shields.io/twitter/follow/mob_sakai.svg?label=Follow&style=social)](https://twitter.com/intent/follow?screen_name=mob_sakai)
 
-<< [Description](#Description) | [Install](#install) | [Usage](#usage) | [Demo](#demo) | [Development Note](#development-note) >>
+<< [Description](#Description) | [Install](#install) | [Usage](#usage) | [Development Note](#development-note) | [Contributing](#contributing) | [Change log][CL] >>
 
-### What's new? [See changelog ![](https://img.shields.io/github/release-date/mob-sakai/GitDependencyResolverForUnity.svg?label=last%20updated)](https://github.com/mob-sakai/GitDependencyResolverForUnity/blob/upm/CHANGELOG.md)
-### Do you want to receive notifications for new releases? [Watch this repo ![](https://img.shields.io/github/watchers/mob-sakai/GitDependencyResolverForUnity.svg?style=social&label=Watch)](https://github.com/mob-sakai/GitDependencyResolverForUnity/subscription)
-### Support me on Patreon! [![become_a_patron](https://user-images.githubusercontent.com/12690315/50731629-3b18b480-11ad-11e9-8fad-4b13f27969c1.png)](https://www.patreon.com/join/2343451?)
+[CL]: https://github.com/mob-sakai/GitDependencyResolverForUnity/blob/upm/CHANGELOG.md
 
 
 
 <br><br><br><br>
+
 ## Description
 
-In Unity 2018.3, the Unity Package Manager (UPM) supported Git. :)  
-https://forum.unity.com/threads/git-support-on-package-manager.573673/
+In Unity 2018.3, [the Unity Package Manager (UPM) supported Git](https://forum.unity.com/threads/git-support-on-package-manager.573673/). :)
 
 This update allows us to quickly install packages on code hosting services such as GitHub.
 
-However, UPM does not support git urls as dependencies in the package. :(
+However, UPM does not support git-based dependencies in the package. :(
 
 ```
 [ package-a/package.json ]
@@ -41,30 +40,38 @@ However, UPM does not support git urls as dependencies in the package. :(
   }
 }
 ```
+When the above package is installed, the following error occur.
 ![console](https://user-images.githubusercontent.com/12690315/57829436-e84daa00-77e9-11e9-84af-f5e46b1f0f02.png)
 
+**Git-based dependencies in packages** feature is on the roadmap for 2020, [but no specific ETA](https://forum.unity.com/threads/custom-package-with-git-dependencies.628390/#post-5367033).
 
 <br>
-This plugin resolves git url dependencies in the package for Unity Package Manager.
 
-You can use a git url as a package dependency!
+This plugin resolves git-based dependencies in the package.  
+You can use git repositories url as a package dependencies! :+1:
 
 
-#### Features
+### Features
 
 * Easy to use: just install
-* Resolve git url dependencies in packages
-* Uninstall unused packages that is installed by this plugin
+* Resolve git-based dependencies in packages
+* Automatically uninstall unused packages that is installed by this plugin
 * Support GitHub, Bitbucket, GitLab, etc.
 * Support private repository
-* Support Unity 2019.1+
-* Support .Net 3.5 & 4.x
-* Update package with a specific tag/branch
+* Support Unity 2018.3 or later
+* Support .Net 3.5 and 4.x
+* Update package with a specific tag/branch/hash
 * Deterministic package installation
-* Refer to no files from the Library folder
+* Support CI environment
+* Support [path query parameter (sub-directory)](https://forum.unity.com/threads/some-feedback-on-package-manager-git-support.743345/) even Unity 2019.2 or earlier
+  * path must be a relative path to the root of the repository.
+  * path query parameter **must** be placed **before** the revision anchor. The reverse order will fail.
+  * A package manifest (package.json) is expected in the specified path.
+  * e.g. With Path query parameter: `https://github.com/user/repo.git?path=/example/folder`
+  * e.g. With revision anchor and path query parameter: `https://github.com/user/repo.git?path=/example/folder#v1.2.3`
 
 
-#### Notes
+### Notes
 
 From: https://forum.unity.com/threads/git-support-on-package-manager.573673/page-3#post-4552084
 
@@ -80,7 +87,7 @@ For example, in the case of a project with a dependency graph like this:
 
 ```
 project (root)
- ├ package A: 1.0.0 
+ ├ package A: 1.0.0
  │  └ package X: 2.0.0
  └ package B: 1.0.0
     └ package C: 2.0.0
@@ -89,81 +96,123 @@ project (root)
 
 **This plugin's algorithm**
 
-Install -> A: 1.0.0, B: 1.0.0, C: 2.0.0, X: 2.0.1
+Install -> A: 1.0.0, B: 1.0.0, C: 2.0.0, X: **2.0.1**
 
 **Unity's algorithm**
+
 Install -> A: 1.0.0, B: 1.0.0, C: 2.0.0, X: **2.0.0**
 
 
 
 <br><br><br><br>
-## Install
 
-Find `Packages/manifest.json` in your project and edit it to look like this:
-```js
+## Installation
+
+### Requirement
+
+* Unity 2018.3 or later
+
+### Using OpenUPM
+
+This package is available on [OpenUPM](https://openupm.com). 
+You can install it via [openupm-cli](https://github.com/openupm/openupm-cli).
+```
+openupm add com.coffee.git-dependency-resolver
+```
+
+### Using Git
+
+Find the `manifest.json` file in the `Packages` directory in your project and edit it as follows:
+```
 {
   "dependencies": {
-    "com.coffee.git-dependency-resolver": "https://github.com/mob-sakai/GitDependencyResolverForUnity.git#1.1.3",
+    "com.coffee.git-dependency-resolver": "https://github.com/mob-sakai/GitDependencyResolverForUnity.git",
+    ...
+  },
+}
+```
+To update the package, change suffix `#{version}` to the target version.
+
+* e.g. `"com.coffee.git-dependency-resolver": "https://github.com/mob-sakai/GitDependencyResolverForUnity.git#1.2.0",`
+
+Or, use [UpmGitExtension](https://github.com/mob-sakai/UpmGitExtension) to install and update the package.
+
+
+
+<br><br><br><br>
+
+## Usage
+
+### For package user
+
+* Install this plugin.
+  * See [installation section](#installation).
+* If the dependencies are not resolved successfully, reopen the project. If that does not work, try the following:
+   1. Close the project.
+   2. Delete `Library/ScriptAssemblies` directory in the project.
+   3. Open the project.
+* When `Unity Package Manager Error` window is opens, click `Continue`.  
+![window](https://user-images.githubusercontent.com/12690315/57823865-08726e80-77d4-11e9-8203-46bf22d504d9.png)
+* Add `Packages/.*` to `.gitignore` to hide auto-installed package. 
+
+### For package developer
+
+* Find the `package.json` file in your package and edit it as follows:
+```
+{
+  ...
+  "gitDependencies": {
+    "your.package": "https://github.com/yourname/yourpackage.git#v1.2.3",
     ...
   }
 }
 ```
-To update the package, change `#{version}` to the target version.  
-Or, use [UpmGitExtension](https://github.com/mob-sakai/UpmGitExtension.git) to install or update the package.
+* You can use [path query parameter (sub-directory)](https://forum.unity.com/threads/some-feedback-on-package-manager-git-support.743345/) even Unity 2019.2 or earlier.
+  * e.g. `"your.package": "https://github.com/yourname/yourpackage.git?path=/pkg/dir#v1.2.3"`
+  * path must be a relative path to the root of the repository.
+  * path query parameter **must** be placed **before** the revision anchor. The reverse order will fail.
+  * A package manifest (package.json) is expected in the specified path.
+* You **must** use `gitDependencies` instead of `dependencies` to define git-based dependencies for the package.
+  * This plugin also supports `dependencies` to resolve git-based dependencies, but if `dependencies` include packages that UPM can't resolve, it will fail to start Unity in CI environment.
+* You **must** announce to your package users that they must install `com.coffee.git-dependency-resolver`.
+  * See [installation section](#installation).
+* It is recommended to use [SemVer](https://semver.org/) as a tag or branch name.  
+  * e.g. `1.0.0`, `0.5.0-preview10`, `0.1.0-alpha+daily5`
 
-
-##### Requirement
-
-* Unity 2018.3 or later
-
-
-
-<br><br><br><br>
-## Usage
-
-* If dependencies are not resolved successfully, try the following:
-    * Reopen the project.
-    * Delete `Library` directory in the project.  
-![library](https://user-images.githubusercontent.com/12690315/57830868-690ea500-77ee-11e9-9e47-4a9794d77da8.png)
-* When `Unity Package Manager Error` window is opens, click `Continue`.  
-![window](https://user-images.githubusercontent.com/12690315/57823865-08726e80-77d4-11e9-8203-46bf22d504d9.png)
-* Use [SemVer](https://semver.org/) as a tag or branch name.  
-eg. `1.0.0`, `0.5.0-preview10`, `0.1.0-alpha+daily5`   
 
 
 
 <br><br><br><br>
-## Demo
 
-https://github.com/mob-sakai/UnityGitDependencyTest
+## Contributing
 
+### Issues
 
+Issues are very valuable to this project.
 
-<br><br><br><br>
-## Development Note
+- Ideas are a valuable source of contributions others can make
+- Problems show where this project is lacking
+- With a question you show where contributors can improve the user experience
 
-#### Develop a package for UPM
+### Pull Requests
 
-The branching strategy when I develop a package for UPM is as follows.
+Pull requests are, a great way to get your ideas into this repository.  
+See [CONTRIBUTING.md](/../../blob/develop/CONTRIBUTING.md).
 
-|Branch|Description|'Assets' directory|
-|-|-|-|
-|develop|Development, Testing|Included|
-|upm(default)|Subtree to publish for UPM|Excluded|
-|{tags}|Tags to install using UPM|Excluded|
+### Support
 
-**Steps to release a package:**
-1. Develop your package project on `develop` branch and update version in `package.json`.
-2. Split subtree into `ump` branch.  
-`git subtree split --prefix=Assets/YOUR/PACKAGE/DIRECTRY --branch upm`
-3. Tag on `ump` branch as new version.
-4. That's all. :)
+This is an open source project that I am developing in my spare time.  
+If you like it, please support me.  
+With your support, I can spend more time on development. :)
 
-For details, see https://www.patreon.com/posts/25070968.
+[![](https://user-images.githubusercontent.com/12690315/50731629-3b18b480-11ad-11e9-8fad-4b13f27969c1.png)](https://www.patreon.com/join/mob_sakai?)  
+[![](https://user-images.githubusercontent.com/12690315/66942881-03686280-f085-11e9-9586-fc0b6011029f.png)](https://github.com/users/mob-sakai/sponsorship)
+
 
 
 
 <br><br><br><br>
+
 ## License
 
 * MIT
@@ -175,8 +224,7 @@ For details, see https://www.patreon.com/posts/25070968.
 ## Author
 
 [mob-sakai](https://github.com/mob-sakai)
-[![](https://img.shields.io/twitter/follow/mob_sakai.svg?label=Follow&style=social)](https://twitter.com/intent/follow?screen_name=mob_sakai)  
-[![become_a_patron](https://user-images.githubusercontent.com/12690315/50731615-ce9db580-11ac-11e9-964f-e0423533dc69.png)](https://www.patreon.com/join/2343451?)
+[![](https://img.shields.io/twitter/follow/mob_sakai.svg?label=Follow&style=social)](https://twitter.com/intent/follow?screen_name=mob_sakai)
 
 
 
@@ -185,5 +233,4 @@ For details, see https://www.patreon.com/posts/25070968.
 * GitHub page : https://github.com/mob-sakai/GitDependencyResolverForUnity
 * Releases : https://github.com/mob-sakai/GitDependencyResolverForUnity/releases
 * Issue tracker : https://github.com/mob-sakai/GitDependencyResolverForUnity/issues
-* Current project : https://github.com/mob-sakai/GitDependencyResolverForUnity/projects/1
 * Change log : https://github.com/mob-sakai/GitDependencyResolverForUnity/blob/upm/CHANGELOG.md

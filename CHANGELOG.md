@@ -1,3 +1,27 @@
+# [2.0.0-preview.1](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/v1.1.3...v2.0.0-preview.1) (2020-08-28)
+
+
+### Bug Fixes
+
+* fix unused package detection ([b057892](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/b0578920f7425a3f7bfed90247454fcb2621980e))
+* ignore empty directories in Packages/ ([abb0c9f](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/abb0c9fc4e0281da3885ca9efd2f4b5a4d97fea0))
+
+
+### Features
+
+* add log for `GDR_LOG` symbol ([e5dacba](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/e5dacba880e308a9797ad9ca51874783c69d5865))
+* deterministic package installation ([5485ff9](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/5485ff927a2e803acffcb4c1bdf6a2d96d2f552c))
+* iterative package resolution ([85a756c](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/85a756c3bd893dae8f83f070ab86fd81dab366c0))
+* support  non semver ([44a5d91](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/44a5d910294ff3d4594a0fa7bd10d4e3f8dc5dc6))
+* support `gitDependencies` in `package.json` ([8961111](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/89611118fa28e3bbcb1785f04c4604cbbbd9936a))
+* support path query parameter (sub-directory) even Unity 2019.2 or earlier ([fa365cc](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/fa365cc61a95cf82dfe093daf99526dd6503fefe)), closes [example/folder#v1](https://github.com/example/folder/issues/v1)
+
+
+### BREAKING CHANGES
+
+* Must use `gitDependencies` instead of `dependencies` to define git-based dependencies for the package.
+This plugin also supports `dependencies` to resolve git-based dependencies, but if `dependencies` include packages that UPM can't resolve, it will fail to start Unity in CI environment.
+
 # Changelog
 
 ## [1.1.3](https://github.com/mob-sakai/GitDependencyResolverForUnity/tree/1.1.3) (2019-10-06)
