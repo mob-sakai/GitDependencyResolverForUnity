@@ -56,6 +56,12 @@ namespace Coffee.GitDependencyResolver
                 @"(git@|git://|http://|https://|ssh://)",
                 k_RegOption);
 
+        private static readonly Regex s_IsFileReg = 
+           new Regex(
+               @"^(file:)" +
+               @"(?<path>.*)",
+               k_RegOption);
+
         private static readonly GitLock s_GitLock = new GitLock();
 
         public string name { get; private set; }
@@ -180,6 +186,13 @@ namespace Coffee.GitDependencyResolver
         public static PackageMeta FromNameAndUrl(string name, string url)
         {
             PackageMeta package = new PackageMeta() {name = name};
+
+            // Local file package.
+            Match f = s_IsFileReg.Match(url);
+            if (f.Success) {
+                string path = f.Groups["path"].Value; // Absolute path to package
+                return FromPackageDir(path); // Treat the package from its package dir
+            }
 
             // Non git package.
             var isGit = s_IsGitReg.IsMatch(url);
