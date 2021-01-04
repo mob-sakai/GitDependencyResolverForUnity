@@ -200,8 +200,7 @@ namespace Coffee.GitDependencyResolver
                     var installPath = "Packages/." + newPackage.GetDirectoryName();
                     DirUtils.Delete(installPath);
                     DirUtils.Create(installPath);
-                    DirUtils.Copy(pkgPath, installPath, p => p != ".git");
-                    DirUtils.Delete(pkgPath);
+                    DirUtils.Move(pkgPath, installPath, p => p != ".git");
 
                     Log("A package '{0}@{1}' has been installed.", package.name, package.version);
                     needToRefresh = true;
