@@ -39,10 +39,14 @@ jobs:
       - name: Activate Unity Editor
         run: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends software-properties-common
-          add-apt-repository ppa:git-core/ppa
+          apt-get install -y --no-install-recommends software-properties-common
+          add-apt-repository -y ppa:git-core/ppa
           apt-get update
-          apt-get install -qq -y --no-install-recommends git
+          apt-get install -y --no-install-recommends git
+
+          if [ `echo "${{ matrix.unityVersion }}" | grep '2019.1'` ] ; then
+            apt-get -q install -y --no-install-recommends libnotify4 libunwind-dev libssl1.0
+          fi
 
           echo "$UNITY_LICENSE" > .ulf
           unity-editor -nographics -logFile /dev/stdout -manualLicenseFile .ulf || :
@@ -56,7 +60,7 @@ jobs:
         if: always()
         run: |
           rm -rf success_* Packages/.com* Library
-          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute
+          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute -ignoreCompilerErrors
 
           [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
           [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
@@ -66,7 +70,7 @@ jobs:
         if: always()
         run: |
           rm -rf success_* Packages/.com*
-          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute
+          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute -ignoreCompilerErrors
 
           [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
           [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
@@ -76,7 +80,7 @@ jobs:
         if: always()
         run: |
           rm -rf success_* Library/ScriptAssemblies
-          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute
+          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute -ignoreCompilerErrors
 
           [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
           [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
@@ -86,7 +90,7 @@ jobs:
         if: always()
         run: |
           rm -rf success_* Library
-          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute
+          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute -ignoreCompilerErrors
 
           [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
           [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )

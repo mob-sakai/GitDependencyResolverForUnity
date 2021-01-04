@@ -1,6 +1,6 @@
 {
   "gitDependencies": {
-    "com.coffee.ugd.translate-it": "https://github.com/mob-sakai/UnityGitDependencyTest.git?path=/packages/translate-it#package-v1.1"
+    "com.coffee.ugd.translate-it": "https://github.com/mob-sakai/UnityGitDependencyTest.git?path=/Packages/translate-it#package-v1.1"
   },
   "dependencies": {
     "com.unity.ads": "2.0.8",
