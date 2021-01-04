@@ -159,7 +159,8 @@ namespace Coffee.GitDependencyResolver
                 for (var i = 0; i < requestedPackages.Count; i++)
                 {
                     PackageMeta package = requestedPackages[i];
-                    var clonePath = Path.GetTempFileName() + "_";
+                    DirUtils.Create(Path.Combine("Temp", "GitDependencies"));
+                    var clonePath = Path.Combine(Path.Combine("Temp", "GitDependencies"), Path.GetFileName(Path.GetTempFileName()));
 
                     EditorUtility.DisplayProgressBar("Clone Package", string.Format("Cloning {0}@{1}", package.name, package.version), i / (float) requestedPackages.Count);
                     Log("Cloning '{0}@{1}' ({2}, {3})", package.name, package.version, package.revision, package.path);
