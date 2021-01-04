@@ -175,8 +175,21 @@ namespace Coffee.GitDependencyResolver
 
                     // Check package path (query)
                     var pkgPath = package.GetPackagePath(clonePath);
-                    PackageMeta newPackage = PackageMeta.FromPackageDir(pkgPath);
-                    if (!Directory.Exists(pkgPath) || newPackage == null || newPackage.name != package.name)
+                    if (!Directory.Exists(pkgPath))
+                    {
+                        Error("Failed to install a package '{0}@{1}': The package is not found. {2}/{3}", package.name, package.version, clonePath, package.path);
+                        needToCheck = false;
+                        continue;
+                    }
+
+                    var newPackage = PackageMeta.FromPackageDir(pkgPath);
+                    if (newPackage == null)
+                    {
+                        Error("Failed to install a package '{0}@{1}': package.json is not found. {2}/{3}", package.name, package.version, clonePath, package.path);
+                        needToCheck = false;
+                        continue;
+                    }
+                    if (newPackage.name != package.name)
                     {
                         Error("Failed to install a package '{0}@{1}': Different package name. {2} != {3}", package.name, package.version, newPackage.name, package.name);
                         needToCheck = false;
