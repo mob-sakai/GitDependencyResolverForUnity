@@ -1,0 +1,96 @@
+name: test
+
+on:
+  push:
+    branches:
+      - develop
+    tags:
+      - "!*"
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        unityVersion:
+          [
+            "2018.3.14f1",
+            "2018.4.30f1",
+            "2019.1.14f1",
+            "2019.2.21f1",
+            "2019.3.15f1",
+            "2019.4.16f1",
+            "2020.1.17f1",
+            "2020.2.1f1",
+          ]
+    runs-on: ubuntu-latest
+    container:
+      # Use Unity image from https://hub.docker.com/r/unityci/editor/tags
+      image: unityci/editor:${{ matrix.unityVersion }}-base-0
+    env:
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
+    steps:
+      # Activate Unity Editor
+      - name: Activate Unity Editor
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends software-properties-common
+          add-apt-repository -y ppa:git-core/ppa
+          apt-get update
+          apt-get install -y --no-install-recommends git
+
+          if [ `echo "${{ matrix.unityVersion }}" | grep '2019.1'` ] ; then
+            apt-get -q install -y --no-install-recommends libnotify4 libunwind-dev libssl1.0
+          fi
+
+          echo "$UNITY_LICENSE" > .ulf
+          unity-editor -nographics -logFile /dev/stdout -manualLicenseFile .ulf || :
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # Test 1: Execute method
+      - name: "Test 1: Execute method"
+        if: always()
+        run: |
+          rm -rf success_* Packages/.com* Library
+          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute -ignoreCompilerErrors
+
+          [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
+          [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
+
+      # Test 2: Run after remove auto-installed packages
+      - name: "Test 2: Run after remove auto-installed packages"
+        if: always()
+        run: |
+          rm -rf success_* Packages/.com*
+          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute -ignoreCompilerErrors
+
+          [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
+          [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
+
+      # Test 3: Run after remove Library/ScriptAssemblies
+      - name: "Test 3: Run after remove Library/ScriptAssemblies"
+        if: always()
+        run: |
+          rm -rf success_* Library/ScriptAssemblies
+          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute -ignoreCompilerErrors
+
+          [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
+          [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
+
+      # Test 4: Run after remove Library
+      - name: "Test 4: Run after remove Library"
+        if: always()
+        run: |
+          rm -rf success_* Library
+          unity-editor -quit -nographics -silent-crashes -logFile /dev/stdout -projectPath . -executeMethod Coffee.Ugd.Runtime.Execute -ignoreCompilerErrors
+
+          [ -e success_compile ] || ( echo "::error:: Compile Script Error" && exit 1 )
+          [ -e success_execute ] || ( echo "::error:: Execute Method Error" && exit 1 )
