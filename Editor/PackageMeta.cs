@@ -137,6 +137,37 @@ namespace Coffee.GitDependencyResolver
             }
         }
 
+        public static PackageMeta[] FromManifestJson(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    return null;
+                }
+
+                Dictionary<string, object> dict = Json.Deserialize(File.ReadAllText(filePath)) as Dictionary<string, object>;
+
+                object obj;
+
+                PackageMeta[] ans = new PackageMeta[0];
+
+                if (dict.TryGetValue("dependencies", out obj)) // if there is any dependencies field
+                {
+                    // parses all packages listed in the manifest.json in a packages array
+                    ans = (obj as Dictionary<string, object>)
+                        .Select(x => FromNameAndUrl(x.Key, (string) x.Value))
+                        .ToArray();
+                }
+
+                return ans;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public static PackageMeta FromPackageDir(string dir)
         {
             var package = FromPackageJson(dir + "/package.json");
