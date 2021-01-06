@@ -51,9 +51,17 @@ jobs:
           echo "$UNITY_LICENSE" > .ulf
           unity-editor -nographics -logFile /dev/stdout -manualLicenseFile .ulf || :
 
+      # Checkout sandbox project
       - uses: actions/checkout@v2
         with:
+          ref: sandbox
+          submodules: true
           fetch-depth: 0
+
+      # Update package submodule
+      - name: "Update package submodule"
+        working-directory: Packages/dev
+        run: git checkout ${{ github.sha }}
 
       # Test 1: Execute method
       - name: "Test 1: Execute method"
