@@ -1,3 +1,29 @@
+# [2.0.0](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/1.1.3...2.0.0) (2021-01-06)
+
+
+### Bug Fixes
+
+* fix for ci ([f9c3772](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/f9c3772ff26a6d304c3ad65bb38fe1f1f5c2678c))
+* fix unused package detection ([8ba02b9](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/8ba02b919f29505ce61e3a74525fb6b604500120))
+* ignore empty directories in Packages/ ([2822ffd](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/2822ffdf6eb3f2cdee76025976b5d41d4f85c35a))
+
+
+### Features
+
+* Add copy directory feature to DirUtils ([6503db9](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/6503db9c571b9515cdc43bfff4ec845e87acf0c2))
+* add log for  symbol ([fc3e9a3](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/fc3e9a3f9a467b9a0d717030db01ffedf70a8b7b))
+* deterministic package installation ([3f60d80](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/3f60d802396964b30074b3f296d6ee3ec8623fe4))
+* iterative package resolution ([c2a3871](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/c2a38715b1ac88c630d638070cefa2aaa4ac44fd))
+* support  non semver ([e711602](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/e711602a5b6e2e9d30b47c6c979a3237cfd37810))
+* support docker image such as unityui/editor ([e009fcc](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/e009fcc19dd07917c66e13b56208c416b19ecda7))
+* support gitDependencies in package.json ([52b280d](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/52b280d0a26c2710d802da853c7acc359e721997))
+* support path query parameter (sub-directory) even Unity 2019.2 or earlier ([0dfde55](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/0dfde55619e63895d00b76259c921b28e2e3cfef))
+
+
+### BREAKING CHANGES
+
+* Must use gitDependencies instead of dependencies to define git-based dependencies for the package.
+
 # [2.0.0-preview.2](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/v2.0.0-preview.1...v2.0.0-preview.2) (2021-01-06)
 
 
