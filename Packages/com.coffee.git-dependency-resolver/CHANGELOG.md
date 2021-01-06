@@ -1,3 +1,17 @@
+# [2.0.0-preview.2](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/v2.0.0-preview.1...v2.0.0-preview.2) (2021-01-06)
+
+
+### Bug Fixes
+
+* Copy and deletes temporary package directory instead of moving it ([e04c5f1](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/e04c5f11f3f4d17951116d0da83d9469a60e632c))
+* fix for ci ([ba3f246](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/ba3f2467728d48306534f009be9d8565383a4016))
+
+
+### Features
+
+* Add copy directory feature to DirUtils ([5e86160](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/5e86160eea0e0e1d811222c21886ca05e09b5da9))
+* support docker image such as unityui/editor ([67ab523](https://github.com/mob-sakai/GitDependencyResolverForUnity/commit/67ab523d0293652ba9205b8c5d9c5cc628420c8c))
+
 # [2.0.0-preview.1](https://github.com/mob-sakai/GitDependencyResolverForUnity/compare/v1.1.3...v2.0.0-preview.1) (2020-08-28)
 
 
