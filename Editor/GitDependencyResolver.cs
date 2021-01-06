@@ -159,7 +159,8 @@ namespace Coffee.GitDependencyResolver
                 for (var i = 0; i < requestedPackages.Count; i++)
                 {
                     PackageMeta package = requestedPackages[i];
-                    var clonePath = Path.GetTempFileName() + "_";
+                    DirUtils.Create(Path.Combine("Temp", "GitDependencies"));
+                    var clonePath = Path.Combine(Path.Combine("Temp", "GitDependencies"), Path.GetFileName(Path.GetTempFileName()));
 
                     EditorUtility.DisplayProgressBar("Clone Package", string.Format("Cloning {0}@{1}", package.name, package.version), i / (float) requestedPackages.Count);
                     Log("Cloning '{0}@{1}' ({2}, {3})", package.name, package.version, package.revision, package.path);
@@ -175,8 +176,21 @@ namespace Coffee.GitDependencyResolver
 
                     // Check package path (query)
                     var pkgPath = package.GetPackagePath(clonePath);
-                    PackageMeta newPackage = PackageMeta.FromPackageDir(pkgPath);
-                    if (!Directory.Exists(pkgPath) || newPackage == null || newPackage.name != package.name)
+                    if (!Directory.Exists(pkgPath))
+                    {
+                        Error("Failed to install a package '{0}@{1}': The package is not found. {2}/{3}", package.name, package.version, clonePath, package.path);
+                        needToCheck = false;
+                        continue;
+                    }
+
+                    var newPackage = PackageMeta.FromPackageDir(pkgPath);
+                    if (newPackage == null)
+                    {
+                        Error("Failed to install a package '{0}@{1}': package.json is not found. {2}/{3}", package.name, package.version, clonePath, package.path);
+                        needToCheck = false;
+                        continue;
+                    }
+                    if (newPackage.name != package.name)
                     {
                         Error("Failed to install a package '{0}@{1}': Different package name. {2} != {3}", package.name, package.version, newPackage.name, package.name);
                         needToCheck = false;
