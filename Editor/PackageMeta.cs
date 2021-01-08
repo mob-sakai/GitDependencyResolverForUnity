@@ -156,17 +156,23 @@ namespace Coffee.GitDependencyResolver
 
                 object obj;
 
-                PackageMeta[] ans = new PackageMeta[0];
+                List<PackageMeta> results = new List<PackageMeta>();
 
                 if (dict.TryGetValue("dependencies", out obj)) // if there is any dependencies field
                 {
-                    // parses all packages listed in the manifest.json in a packages array
-                    ans = (obj as Dictionary<string, object>)
-                        .Select(x => FromNameAndUrl(x.Key, (string) x.Value))
-                        .ToArray();
+                    // parses all packages listed in the manifest.json.
+                    results.AddRange((obj as Dictionary<string, object>)
+                        .Select(x => FromNameAndUrl(x.Key, (string) x.Value)));
                 }
 
-                return ans;
+                if (dict.TryGetValue("gitDependencies", out obj)) // if there is any gitDependencies field
+                {
+                    // parses all packages listed in the manifest.json.
+                    results.AddRange((obj as Dictionary<string, object>)
+                        .Select(x => FromNameAndUrl(x.Key, (string) x.Value)));
+                }
+
+                return results.ToArray();
             }
             catch
             {
