@@ -38,7 +38,7 @@ namespace Coffee.GitDependencyResolver
 #if NETSTANDARD
         const RegexOptions k_RegOption = RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture;
 #else
-        const RegexOptions k_RegOption = RegexOptions.CultureInvariant | RegexOptions.Compiled | RegexOptions.ExplicitCapture;
+        private const RegexOptions k_RegOption = RegexOptions.CultureInvariant | RegexOptions.Compiled | RegexOptions.ExplicitCapture;
 #endif
         private const string k_GitLockFile = "Packages/packages-lock.git.json";
 
@@ -56,11 +56,11 @@ namespace Coffee.GitDependencyResolver
                 @"(git@|git://|http://|https://|ssh://)",
                 k_RegOption);
 
-        private static readonly Regex s_IsFileReg = 
-           new Regex(
-               @"^(file:)" +
-               @"(?<path>.*)",
-               k_RegOption);
+        private static readonly Regex s_IsFileReg =
+            new Regex(
+                @"^(file:)" +
+                @"(?<path>.*)",
+                k_RegOption);
 
         private static readonly GitLock s_GitLock = new GitLock();
 
@@ -87,31 +87,26 @@ namespace Coffee.GitDependencyResolver
             gitDependencies = new PackageMeta [0];
         }
 
-        public static PackageMeta FromPackageJson(string filePath)
+        private static PackageMeta FromPackageJson(string filePath)
         {
             try
             {
-                if (!File.Exists(filePath))
-                {
-                    return null;
-                }
+                if (!File.Exists(filePath)) return null;
 
-                string dir = Path.GetDirectoryName(filePath);
-                Dictionary<string, object> dict = Json.Deserialize(File.ReadAllText(filePath)) as Dictionary<string, object>;
-                PackageMeta package = new PackageMeta() {repository = dir,};
+                var dir = Path.GetDirectoryName(filePath);
+                var dict = Json.Deserialize(File.ReadAllText(filePath)) as Dictionary<string, object>;
+                if (dict == null) return null;
+
+                var package = new PackageMeta() {repository = dir,};
 
 
                 object obj;
 
                 if (dict.TryGetValue("name", out obj))
-                {
                     package.name = obj as string;
-                }
 
                 if (dict.TryGetValue("version", out obj))
-                {
                     package.version = obj as string;
-                }
 
                 if (dict.TryGetValue("dependencies", out obj))
                 {
@@ -120,9 +115,7 @@ namespace Coffee.GitDependencyResolver
                         .ToArray();
                 }
                 else
-                {
                     package.dependencies = new PackageMeta[0];
-                }
 
                 if (dict.TryGetValue("gitDependencies", out obj))
                 {
@@ -131,9 +124,7 @@ namespace Coffee.GitDependencyResolver
                         .ToArray();
                 }
                 else
-                {
                     package.gitDependencies = new PackageMeta[0];
-                }
 
                 return package;
             }
@@ -143,36 +134,39 @@ namespace Coffee.GitDependencyResolver
             }
         }
 
-        public static PackageMeta[] FromManifestJson(string filePath)
+        public static IEnumerable<PackageMeta> FromManifestJson(string filePath)
         {
             try
             {
-                if (!File.Exists(filePath))
-                {
-                    return null;
-                }
+                var results = Enumerable.Empty<PackageMeta>();
+                if (!File.Exists(filePath)) return results;
 
-                Dictionary<string, object> dict = Json.Deserialize(File.ReadAllText(filePath)) as Dictionary<string, object>;
+                var dict = Json.Deserialize(File.ReadAllText(filePath)) as Dictionary<string, object>;
+                if (dict == null) return results;
 
                 object obj;
 
-                List<PackageMeta> results = new List<PackageMeta>();
-
-                if (dict.TryGetValue("dependencies", out obj)) // if there is any dependencies field
+                // If there is any 'dependencies' field, parses all packages listed in the manifest.json.
+                if (dict.TryGetValue("dependencies", out obj))
                 {
-                    // parses all packages listed in the manifest.json.
-                    results.AddRange((obj as Dictionary<string, object>)
-                        .Select(x => FromNameAndUrl(x.Key, (string) x.Value)));
+                    var dependencies = obj as Dictionary<string, object>;
+                    if (dependencies != null)
+                    {
+                        results = results.Concat(dependencies.Select(x => FromNameAndUrl(x.Key, (string) x.Value)));
+                    }
                 }
 
-                if (dict.TryGetValue("gitDependencies", out obj)) // if there is any gitDependencies field
+                // If there is any 'gitDependencies' field, parses all packages listed in the manifest.json.
+                if (dict.TryGetValue("gitDependencies", out obj))
                 {
-                    // parses all packages listed in the manifest.json.
-                    results.AddRange((obj as Dictionary<string, object>)
-                        .Select(x => FromNameAndUrl(x.Key, (string) x.Value)));
+                    var dependencies = obj as Dictionary<string, object>;
+                    if (dependencies != null)
+                    {
+                        results = results.Concat(dependencies.Select(x => FromNameAndUrl(x.Key, (string) x.Value)));
+                    }
                 }
 
-                return results.ToArray();
+                return results;
             }
             catch
             {
@@ -191,12 +185,13 @@ namespace Coffee.GitDependencyResolver
 
         public static PackageMeta FromNameAndUrl(string name, string url)
         {
-            PackageMeta package = new PackageMeta() {name = name};
+            var package = new PackageMeta() {name = name};
 
             // Local file package.
-            Match f = s_IsFileReg.Match(url);
-            if (f.Success) {
-                string path = f.Groups["path"].Value; // Absolute path to package
+            var f = s_IsFileReg.Match(url);
+            if (f.Success)
+            {
+                var path = f.Groups["path"].Value; // Absolute path to package
                 return FromPackageDir(path); // Treat the package from its package dir
             }
 
@@ -209,7 +204,7 @@ namespace Coffee.GitDependencyResolver
             }
 
             // No package url
-            Match m = s_PackageUrlReg.Match(url);
+            var m = s_PackageUrlReg.Match(url);
             if (!m.Success) return package;
 
             package.repository = m.Groups["repository"].Value;

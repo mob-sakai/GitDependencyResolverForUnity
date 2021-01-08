@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEngine;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("GitDependencyResolver.EditorTests")]
 
@@ -13,16 +12,16 @@ namespace Coffee.GitDependencyResolver
     [InitializeOnLoad]
     internal static class Resolver
     {
-        const StringComparison Ordinal = StringComparison.Ordinal;
-        const string k_LogHeader = "<b><color=#2E8B57>[GitResolver]</color></b> ";
+        private const StringComparison k_Ordinal = StringComparison.Ordinal;
+        private const string k_LogHeader = "<b><color=#2E8B57>[GitResolver]</color></b> ";
 
         [System.Diagnostics.Conditional("GDR_LOG")]
-        static void Log(string format, params object[] args)
+        private static void Log(string format, params object[] args)
         {
             UnityEngine.Debug.LogFormat(k_LogHeader + format, args);
         }
 
-        static void Error(string format, params object[] args)
+        private static void Error(string format, params object[] args)
         {
             UnityEngine.Debug.LogErrorFormat(k_LogHeader + format, args);
         }
@@ -61,8 +60,8 @@ namespace Coffee.GitDependencyResolver
                     .SelectMany(x => x.GetAllDependencies()) // Get all dependencies
                     .ToArray();
 
-                PackageMeta[] autoInstalledPackages = Directory.GetDirectories("./Packages")
-                    .Where(x => Path.GetFileName(x).StartsWith(".", Ordinal)) // Directory name starts with '.'. This is 'auto-installed package'
+                var autoInstalledPackages = Directory.GetDirectories("./Packages")
+                    .Where(x => Path.GetFileName(x).StartsWith(".", k_Ordinal)) // Directory name starts with '.'. This is 'auto-installed package'
                     .Select(PackageMeta.FromPackageDir) // Convert to PackageMeta
                     .Where(x => x != null) // Skip null
                     .ToArray();
@@ -115,7 +114,7 @@ namespace Coffee.GitDependencyResolver
                 UninstallUnusedPackages();
 
                 // Collect all installed packages.
-                PackageMeta[] installedPackages = GetInstalledPackages();
+                var installedPackages = GetInstalledPackages();
 
                 // Collect all dependencies.
                 var dependencies = installedPackages
@@ -158,7 +157,7 @@ namespace Coffee.GitDependencyResolver
                 // Install all requested packages.
                 for (var i = 0; i < requestedPackages.Count; i++)
                 {
-                    PackageMeta package = requestedPackages[i];
+                    var package = requestedPackages[i];
                     DirUtils.Create(Path.Combine("Temp", "GitDependencies"));
                     var clonePath = Path.Combine(Path.Combine("Temp", "GitDependencies"), Path.GetFileName(Path.GetTempFileName()));
 
