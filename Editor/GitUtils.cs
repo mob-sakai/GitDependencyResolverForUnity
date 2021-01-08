@@ -5,12 +5,13 @@ using UnityEngine;
 namespace Coffee.GitDependencyResolver
 {
     //TODO: It's better to implement it in javascript.
+    /// <summary>
+    /// Utility for git operations.
+    /// </summary>
     internal static class GitUtils
     {
-        private static readonly StringBuilder s_sbError = new StringBuilder();
-        private static readonly StringBuilder s_sbOutput = new StringBuilder();
-
-        private static bool IsGitRunning { get; set; }
+        private static readonly StringBuilder k_SbError = new StringBuilder();
+        private static readonly StringBuilder k_SbOutput = new StringBuilder();
 
         private delegate void GitCommandCallback(bool success, string output);
 
@@ -42,7 +43,7 @@ namespace Coffee.GitDependencyResolver
                 }, dir: clonePath);
         }
 
-        static bool ExecuteGitCommand(string args, GitCommandCallback callback = null, bool waitForExit = true, string dir = ".")
+        private static bool ExecuteGitCommand(string args, GitCommandCallback callback = null, bool waitForExit = true, string dir = ".")
         {
             var startInfo = new System.Diagnostics.ProcessStartInfo
             {
@@ -55,47 +56,44 @@ namespace Coffee.GitDependencyResolver
                 WorkingDirectory = dir,
             };
 
-            var launchProcess = System.Diagnostics.Process.Start(startInfo);
-            if (launchProcess == null || launchProcess.HasExited || launchProcess.Id == 0)
+            var process = System.Diagnostics.Process.Start(startInfo);
+            if (process == null || process.HasExited || process.Id == 0)
             {
                 Debug.LogError("No 'git' executable was found. Please install Git on your system and restart Unity");
                 if (callback != null)
                     callback(false, "");
+                return false;
             }
             else
             {
                 //Add process callback.
-                IsGitRunning = true;
-                s_sbError.Length = 0;
-                s_sbOutput.Length = 0;
-                launchProcess.OutputDataReceived += (sender, e) => s_sbOutput.AppendLine(e.Data ?? "");
-                launchProcess.ErrorDataReceived += (sender, e) => s_sbError.AppendLine(e.Data ?? "");
-                launchProcess.Exited += (sender, e) =>
+                k_SbError.Length = 0;
+                k_SbOutput.Length = 0;
+                process.OutputDataReceived += (sender, e) => k_SbOutput.AppendLine(e.Data ?? "");
+                process.ErrorDataReceived += (sender, e) => k_SbError.AppendLine(e.Data ?? "");
+                process.Exited += (sender, e) =>
                 {
-                    IsGitRunning = false;
-                    var success = 0 == launchProcess.ExitCode;
+                    var success = 0 == process.ExitCode;
                     if (!success)
                     {
-                        Debug.LogErrorFormat("Error: git {0}\n\n{1}", args, s_sbError);
+                        Debug.LogErrorFormat("Error: git {0}\n\n{1}", args, k_SbError);
                     }
 
                     if (callback != null)
-                        callback(success, s_sbOutput.ToString());
+                        callback(success, k_SbOutput.ToString());
                 };
 
-                launchProcess.BeginOutputReadLine();
-                launchProcess.BeginErrorReadLine();
-                launchProcess.EnableRaisingEvents = true;
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                process.EnableRaisingEvents = true;
 
                 if (waitForExit)
                 {
-                    launchProcess.WaitForExit();
+                    process.WaitForExit();
                 }
             }
 
-            return launchProcess.HasExited
-                ? launchProcess.ExitCode == 0
-                : true;
+            return !process.HasExited || process.ExitCode == 0;
         }
     }
 }
