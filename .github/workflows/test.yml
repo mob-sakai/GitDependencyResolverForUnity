@@ -35,6 +35,11 @@ jobs:
       UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
 
     steps:
+      - name: Show context
+        run: echo "$GITHUB_CONTEXT"
+        env:
+          GITHUB_CONTEXT: ${{ToJson(github)}}
+
       # Activate Unity Editor
       - name: Activate Unity Editor
         run: |
@@ -55,13 +60,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: sandbox
-          submodules: true
-          fetch-depth: 0
-
-      # Update package submodule
-      - name: "Update package submodule"
-        working-directory: Packages/dev
-        run: git checkout ${{ github.sha }}
+      - uses: actions/checkout@v2
+        with:
+          path: Packages/dev
 
       # Test 1: Execute method
       - name: "Test 1: Execute method"
