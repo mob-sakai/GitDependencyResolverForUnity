@@ -39,7 +39,7 @@ namespace Coffee.GitDependencyResolver
             return Directory.GetDirectories("./Library/PackageCache")
                 .Concat(Directory.GetDirectories("./Packages"))
                 .Select(PackageMeta.FromPackageDir) // Convert to PackageMeta
-                .Concat(PackageMeta.FromManifestJson("./Packages/manifest.json")) // Parses project's manifest.json
+                .Concat(new[] {PackageMeta.FromPackageJson("./Packages/manifest.json")}) // Parses project's manifest.json
                 .Where(x => x != null) // Skip null
                 .ToArray();
         }

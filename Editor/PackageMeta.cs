@@ -87,7 +87,7 @@ namespace Coffee.GitDependencyResolver
             gitDependencies = new PackageMeta [0];
         }
 
-        private static PackageMeta FromPackageJson(string filePath)
+        public static PackageMeta FromPackageJson(string filePath)
         {
             try
             {
@@ -127,46 +127,6 @@ namespace Coffee.GitDependencyResolver
                     package.gitDependencies = new PackageMeta[0];
 
                 return package;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public static IEnumerable<PackageMeta> FromManifestJson(string filePath)
-        {
-            try
-            {
-                var results = Enumerable.Empty<PackageMeta>();
-                if (!File.Exists(filePath)) return results;
-
-                var dict = Json.Deserialize(File.ReadAllText(filePath)) as Dictionary<string, object>;
-                if (dict == null) return results;
-
-                object obj;
-
-                // If there is any 'dependencies' field, parses all packages listed in the manifest.json.
-                if (dict.TryGetValue("dependencies", out obj))
-                {
-                    var dependencies = obj as Dictionary<string, object>;
-                    if (dependencies != null)
-                    {
-                        results = results.Concat(dependencies.Select(x => FromNameAndUrl(x.Key, (string) x.Value)));
-                    }
-                }
-
-                // If there is any 'gitDependencies' field, parses all packages listed in the manifest.json.
-                if (dict.TryGetValue("gitDependencies", out obj))
-                {
-                    var dependencies = obj as Dictionary<string, object>;
-                    if (dependencies != null)
-                    {
-                        results = results.Concat(dependencies.Select(x => FromNameAndUrl(x.Key, (string) x.Value)));
-                    }
-                }
-
-                return results;
             }
             catch
             {
