@@ -56,6 +56,12 @@ namespace Coffee.GitDependencyResolver
                 @"(git@|git://|http://|https://|ssh://)",
                 k_RegOption);
 
+        private static readonly Regex s_IsFileReg = 
+           new Regex(
+               @"^(file:)" +
+               @"(?<path>.*)",
+               k_RegOption);
+
         private static readonly GitLock s_GitLock = new GitLock();
 
         public string name { get; private set; }
@@ -137,6 +143,37 @@ namespace Coffee.GitDependencyResolver
             }
         }
 
+        public static PackageMeta[] FromManifestJson(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    return null;
+                }
+
+                Dictionary<string, object> dict = Json.Deserialize(File.ReadAllText(filePath)) as Dictionary<string, object>;
+
+                object obj;
+
+                PackageMeta[] ans = new PackageMeta[0];
+
+                if (dict.TryGetValue("dependencies", out obj)) // if there is any dependencies field
+                {
+                    // parses all packages listed in the manifest.json in a packages array
+                    ans = (obj as Dictionary<string, object>)
+                        .Select(x => FromNameAndUrl(x.Key, (string) x.Value))
+                        .ToArray();
+                }
+
+                return ans;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public static PackageMeta FromPackageDir(string dir)
         {
             var package = FromPackageJson(dir + "/package.json");
@@ -149,6 +186,13 @@ namespace Coffee.GitDependencyResolver
         public static PackageMeta FromNameAndUrl(string name, string url)
         {
             PackageMeta package = new PackageMeta() {name = name};
+
+            // Local file package.
+            Match f = s_IsFileReg.Match(url);
+            if (f.Success) {
+                string path = f.Groups["path"].Value; // Absolute path to package
+                return FromPackageDir(path); // Treat the package from its package dir
+            }
 
             // Non git package.
             var isGit = s_IsGitReg.IsMatch(url);
